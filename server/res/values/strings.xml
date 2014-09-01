@@ -10,4 +10,6 @@
     <string name="i_server">I am server</string>
     <string name="connect">Connect to server</string>
     <string name="connected">Connected to server</string>
+    <string name="speed_gps">GPS</string>
+    <string name="speed_other">OTHER</string>
 </resources>

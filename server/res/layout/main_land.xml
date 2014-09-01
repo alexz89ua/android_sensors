@@ -4,6 +4,16 @@
                 android:layout_height="match_parent"
                 android:id="@+id/main">
 
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/chart"
+            android:orientation="vertical"
+            android:visibility="visible">
+    </LinearLayout>
+
+
+
 
     <RelativeLayout
             android:layout_width="250dp"
@@ -21,7 +31,6 @@
                 android:text="0"
                 android:id="@+id/speed"/>
 
-
         <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -29,17 +38,15 @@
                 android:textSize="22sp"
                 android:layout_below="@+id/speed"
                 android:layout_centerHorizontal="true"/>
+
+        <Switch
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="25dp"
+                android:id="@+id/speed_switcher"
+                android:layout_centerHorizontal="true"
+                android:text="@string/speed_gps"/>
     </RelativeLayout>
-
-
-
-    <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:id="@+id/chart"
-            android:orientation="vertical"
-            android:visibility="visible">
-    </LinearLayout>
 
     <LinearLayout
             android:layout_width="wrap_content"

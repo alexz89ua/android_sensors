@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.*;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.MediaStore;
@@ -36,7 +37,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     public final static int MIN_DELTA_SPEED = 5;
     private Button server, showMap, showConsole, writeToFile;
     private ServiceConnection sConn;
-    private WriteService writeServise;
+    private WriteService writeService;
     private boolean bound = false, write = false;
     private Intent intentService;
     private BroadcastReceiver mReceiver;
@@ -47,6 +48,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     public View mapFragment;
     public TextView tvSpeed;
     public RelativeLayout rlSpeed;
+    public Switch speedSwitcher;
     private LinearLayout llConsole;
     private TextView tvConsole;
     private View mDecorView;
@@ -89,7 +91,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         writeToFile = (Button) findViewById(R.id.write);
         textView = (TextView) findViewById(R.id.text);
         llChart = (LinearLayout) findViewById(R.id.chart);
-        mapFragment = (View) findViewById(R.id.map);
+        mapFragment = findViewById(R.id.map);
         mapFragment.setVisibility(View.GONE);
         tvSpeed = (TextView) findViewById(R.id.speed);
         rlSpeed = (RelativeLayout) findViewById(R.id.rl_speed);
@@ -97,6 +99,14 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         tvConsole = (TextView) findViewById(R.id.tv_console);
         cbAuto = (CheckBox) findViewById(R.id.cb_auto);
         seekBarSensativity = (SeekBar) findViewById(R.id.seek_bar);
+
+        speedSwitcher = (Switch) findViewById(R.id.speed_switcher);
+        speedSwitcher.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                speedSwitcher.setText(isChecked ? R.string.speed_other : R.string.speed_gps);
+            }
+        });
 
         server.setOnClickListener(this);
         showMap.setOnClickListener(this);
@@ -157,7 +167,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         sConn = new ServiceConnection() {
             public void onServiceConnected(ComponentName name, IBinder binder) {
                 Log.d("Loger", "MainActivity onServiceConnected");
-                writeServise = ((WriteService.WriteBinder) binder).getService();
+                writeService = ((WriteService.WriteBinder) binder).getService();
                 bound = true;
             }
 
@@ -267,7 +277,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
             switch (view.getId()) {
 
                 case R.id.server:
-                    writeServise.startServer();
+                    writeService.startServer();
                     break;
 
                 case R.id.show_map:
@@ -329,17 +339,17 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         write = true;
                         if (write && bound) {
                             for (String device : devicesList) {
-                                writeServise.createFileToWrite(device);
+                                writeService.createFileToWrite(device);
                                 String dataToWrite = "time" + "\t\t\t\t\t\t\t\t\t\t\t" + "x" + "\t\t\t\t\t" + "y" + "\t\t\t\t" + "z" + "\t\t\t\t" + "sqr" +
                                         "\t\t\t\t\t\t\t" + "lat" + "\t\t\t\t\t\t" + "lon" + "\t\t\t\t\t" + "speed" + "\n";
-                                writeServise.writeToFile(device, dataToWrite);
+                                writeService.writeToFile(device, dataToWrite);
                             }
                         }
                     } else {
                         writeToFile.setText("Write to file");
                         write = false;
                         if (bound) {
-                            writeServise.stopWriteToFile();
+                            writeService.stopWriteToFile();
                         }
                     }
                     break;
@@ -449,12 +459,9 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         float z = Float.valueOf(arr[3]);
                         float sqr = (float) Math.sqrt(x * x + y * y + z * z);
 
-                        long graphTime = sendingTime + readDataTime;
-
-                        showSpeed(getModel(device), arr[6]);
-
-                        //TODO:
                         float lff;
+
+                        long graphTime = sendingTime + readDataTime;
 
                         if (information.lffSeries.getItemCount() != 0) {
                             float lastLFF = (float) information.lffSeries.getY(information.lffSeries.getItemCount() - 1);
@@ -476,6 +483,38 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                             lat = Double.valueOf(arr[4]);
                             lon = Double.valueOf(arr[5]);
                             speed = Double.valueOf(arr[6]);
+
+
+                            String stringSpeed;
+                            if (speedSwitcher.isChecked()){
+                                if (information.lffSeries.getItemCount() == 0){
+                                    stringSpeed = "0";
+                                } else {
+                                    float[] distance = new float[1];
+                                    Location.distanceBetween(information.lastLat, information.lastLon
+                                            , lat, lon, distance);
+
+                                    double timeDiffInHours = (graphTime - information.xSeries.getMaxX())
+                                            / 1000 / 60 / 60;
+                                    double distanceInKilometers = distance[0] / 1000;
+
+                                    double graphSpeed = distanceInKilometers / timeDiffInHours;
+
+                                    /*Log.i("logerr", "lat1 = " + information.lastLat + "; lon1 = " + information.lastLon);
+                                    Log.i("logerr", "lat2 = " + lat + "; lon2 = " + lon);
+
+                                    Log.i("logerr", "distance = " + distanceInKilometers);
+                                    Log.i("logerr", "graphSpeed = " + graphSpeed);*/
+                                    stringSpeed = String.valueOf(graphSpeed);
+                                }
+                            } else {
+                                stringSpeed = arr[6];
+                            }
+                            showSpeed(getModel(device), stringSpeed);
+
+
+                            information.lastLat = lat;
+                            information.lastLon = lon;
 
                             float pit;
 
@@ -506,7 +545,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                                 String time = simpleDateFormat.format(System.currentTimeMillis());
                                 String dataToWrite = time + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
                                         "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\n";
-                                writeServise.writeToFile(getModel(device), dataToWrite);
+                                writeService.writeToFile(getModel(device), dataToWrite);
                             }
 
                             mapHelper.addPoint(lat, lon, pit, speed, true);
@@ -543,7 +582,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         information.zSeries.add(graphTime, z);
                         information.sqrSeries.add(graphTime, sqr);
 
-                        //TODO:
                         information.lffSeries.add(graphTime, lff);
 
                     }
@@ -851,6 +889,8 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         private XYValueSeries zSeries;
         private XYValueSeries sqrSeries;
         private XYValueSeries lffSeries;
+
+        private double lastLat = 0, lastLon = 0;
 
         private org.achartengine.renderer.XYSeriesRenderer xSeriesRenderer;
         private org.achartengine.renderer.XYSeriesRenderer ySeriesRenderer;
