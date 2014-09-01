@@ -9,7 +9,7 @@ import com.stfalcon.client.connection.ConnectionWrapper;
  * @author alwx
  * @version 1.0
  */
-public class SampleApplication extends Application {
+public class MyApplication extends Application {
     public static final String CONNECTED = "com.example.sasha.CONNECTED";
     public static final String DATA = "com.example.sasha.DATA";
     public static final String DEVICE = "device";
@@ -19,18 +19,18 @@ public class SampleApplication extends Application {
     public static final String SENSOR = "sensor";
     public static final String SENSOR_TYPE = "sensor_type";
     private ConnectionWrapper mConnectionWrapper;
-    private static SampleApplication self;
+    private static MyApplication self;
     private SharedPreferences sharedPreferences;
 
 
-    public static synchronized SampleApplication getInstance() {
+    public static synchronized MyApplication getInstance() {
         return self;
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        synchronized (SampleApplication.class) {
+        synchronized (MyApplication.class) {
             self = this;
         }
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);

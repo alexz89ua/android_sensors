@@ -14,13 +14,11 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.media.RingtoneManager;
-import android.net.wifi.WifiManager;
 import android.os.*;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import com.stfalcon.client.connection.*;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.*;
@@ -28,7 +26,7 @@ import java.util.*;
 /**
  * Created by alexandr on 19.08.14.
  */
-public class WriteService extends Service implements SensorEventListener {
+public class SensorService extends Service implements SensorEventListener {
     private static final long SENDING_DATA_INTERVAL_IN_MILLIS = 1000;
 
     private int NOTIFICATION = 1000;
@@ -58,7 +56,7 @@ public class WriteService extends Service implements SensorEventListener {
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         // @todo ?
-        SampleApplication.getInstance().createConnectionWrapper(
+        MyApplication.getInstance().createConnectionWrapper(
                 new ConnectionWrapper.OnCreatedListener() {
                     @Override
                     public void onCreated() {
@@ -79,7 +77,7 @@ public class WriteService extends Service implements SensorEventListener {
      * Додає нотифікацію в статус бар
      */
     public void startListening() {
-        activeSensorType = SampleApplication.getInstance().getSendedType();
+        activeSensorType = MyApplication.getInstance().getSendedType();
         startForeground(NOTIFICATION, makeNotification());
         Log.v("Loger", "START_DONE");
 
@@ -122,7 +120,7 @@ public class WriteService extends Service implements SensorEventListener {
         if (createdConnectionWrapper) {
             if (type == activeSensorType && data != null) {
                 String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
-                data = data + loc + " " + String.valueOf(previousBestLocation.getSpeed()) + "\n";
+                data = data + loc + " " + String.valueOf(previousBestLocation.getSpeed() * 3.6)  + "\n";
                 dataToSend.add(data);
 
                 if (time - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
@@ -138,7 +136,7 @@ public class WriteService extends Service implements SensorEventListener {
                             new HashMap<String, String>() {{
                                 put(Communication.MESSAGE_TYPE, Communication.Connect.DATA);
                                 put(Communication.Connect.DEVICE, createDeviceDescription(type));
-                                put(SampleApplication.SENSOR, stringDataToSend);
+                                put(MyApplication.SENSOR, stringDataToSend);
                             }}
                     );
 
@@ -250,8 +248,8 @@ public class WriteService extends Service implements SensorEventListener {
 
             //Log.i("Loger", dataA);
 
-            sendNewData(System.currentTimeMillis(), dataA, WriteService.TYPE_A);
-            sendNewData(System.currentTimeMillis(), dataF, WriteService.TYPE_F);
+            sendNewData(System.currentTimeMillis(), dataA, SensorService.TYPE_A);
+            sendNewData(System.currentTimeMillis(), dataF, SensorService.TYPE_F);
 
 
         }
@@ -264,7 +262,7 @@ public class WriteService extends Service implements SensorEventListener {
 
             String dataL = time + " " + x + " " + y + " " + z;
 
-            sendNewData(System.currentTimeMillis(), dataL, WriteService.TYPE_L);
+            sendNewData(System.currentTimeMillis(), dataL, SensorService.TYPE_L);
 
         }
 
@@ -281,7 +279,7 @@ public class WriteService extends Service implements SensorEventListener {
 
             String dataL = time + " " + x + " " + y + " " + z;
 
-            sendNewData(System.currentTimeMillis(), dataL, WriteService.TYPE_G);
+            sendNewData(System.currentTimeMillis(), dataL, SensorService.TYPE_G);
         }
     }
 
@@ -294,8 +292,8 @@ public class WriteService extends Service implements SensorEventListener {
      * Для передачі даних в актівіті
      */
     public class WriteBinder extends Binder {
-        public WriteService getService() {
-            return WriteService.this;
+        public SensorService getService() {
+            return SensorService.this;
         }
     }
 
@@ -368,8 +366,8 @@ public class WriteService extends Service implements SensorEventListener {
         @Override
         public void onMessage(String type, JSONObject message) {
             if (type.equals(Communication.ConnectSuccess.TYPE)) {
-                Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-                LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
+                Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                LocalBroadcastManager.getInstance(SensorService.this).sendBroadcast(intentTracking);
                 createdConnectionWrapper = true;
             }
         }
@@ -382,7 +380,7 @@ public class WriteService extends Service implements SensorEventListener {
     }
 
     private ConnectionWrapper getConnectionWrapper() {
-        return SampleApplication.getInstance().getConnectionWrapper();
+        return MyApplication.getInstance().getConnectionWrapper();
     }
 }
 

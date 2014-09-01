@@ -18,7 +18,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
     private Button start, stop, client;
     private RadioButton accel, lAccel, fAccel, gravity;
     private ServiceConnection sConn;
-    private WriteService writeServise;
+    private SensorService writeServise;
     private boolean bound = false;
     private Intent intentService;
     private BroadcastReceiver mReceiver;
@@ -49,29 +49,29 @@ public class MyActivity extends Activity implements View.OnClickListener {
         gravity.setOnClickListener(this);
 
 
-        switch (SampleApplication.getInstance().getSendedType()) {
-            case WriteService.TYPE_A:
+        switch (MyApplication.getInstance().getSendedType()) {
+            case SensorService.TYPE_A:
                 accel.setChecked(true);
                 break;
-            case WriteService.TYPE_F:
+            case SensorService.TYPE_F:
                 fAccel.setChecked(true);
                 break;
-            case WriteService.TYPE_L:
+            case SensorService.TYPE_L:
                 lAccel.setChecked(true);
                 break;
-            case WriteService.TYPE_G:
+            case SensorService.TYPE_G:
                 gravity.setChecked(true);
                 break;
         }
 
 
-        intentService = new Intent(this, WriteService.class);
+        intentService = new Intent(this, SensorService.class);
 
         //Connect location service
         sConn = new ServiceConnection() {
             public void onServiceConnected(ComponentName name, IBinder binder) {
                 Log.d("Loger", "MainActivity onServiceConnected");
-                writeServise = ((WriteService.WriteBinder) binder).getService();
+                writeServise = ((SensorService.WriteBinder) binder).getService();
                 bound = true;
             }
 
@@ -113,7 +113,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
             switch (view.getId()) {
                 case R.id.start:
                     Log.i("Loger", "start");
-                    startService(new Intent(this, WriteService.class));
+                    startService(new Intent(this, SensorService.class));
                     writeServise.startListening();
                     break;
 
@@ -127,19 +127,19 @@ public class MyActivity extends Activity implements View.OnClickListener {
                     break;
 
                 case R.id.type_a:
-                    SampleApplication.getInstance().setSendetType(WriteService.TYPE_A);
+                    MyApplication.getInstance().setSendetType(SensorService.TYPE_A);
                     break;
 
                 case R.id.type_fa:
-                    SampleApplication.getInstance().setSendetType(WriteService.TYPE_F);
+                    MyApplication.getInstance().setSendetType(SensorService.TYPE_F);
                     break;
 
                 case R.id.type_la:
-                    SampleApplication.getInstance().setSendetType(WriteService.TYPE_L);
+                    MyApplication.getInstance().setSendetType(SensorService.TYPE_L);
                     break;
 
                 case R.id.type_g:
-                    SampleApplication.getInstance().setSendetType(WriteService.TYPE_G);
+                    MyApplication.getInstance().setSendetType(SensorService.TYPE_G);
                     break;
 
             }
@@ -152,24 +152,24 @@ public class MyActivity extends Activity implements View.OnClickListener {
      */
     private void registerReceiver() {
 
-        IntentFilter intentFilter = new IntentFilter(SampleApplication.CONNECTED);
+        IntentFilter intentFilter = new IntentFilter(MyApplication.CONNECTED);
         mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                if (intent.hasExtra(SampleApplication.WIFI)) {
+                if (intent.hasExtra(MyApplication.WIFI)) {
                     startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
                     return;
                 }
 
-                if (intent.hasExtra(SampleApplication.DEVICE)) {
+                if (intent.hasExtra(MyApplication.DEVICE)) {
                     Toast.makeText(MyActivity.this,
                             getString(R.string.connected),
                             Toast.LENGTH_LONG).show();
                 }
 
-                if (intent.hasExtra(SampleApplication.SPEED)) {
-                    String speed = intent.getStringExtra(SampleApplication.SPEED);
+                if (intent.hasExtra(MyApplication.SPEED)) {
+                    String speed = intent.getStringExtra(MyApplication.SPEED);
                     tvSpeed.setText(speed);
                     tvSpeed.invalidate();
                    // Log.i("Loger", "SPEED " + speed);
