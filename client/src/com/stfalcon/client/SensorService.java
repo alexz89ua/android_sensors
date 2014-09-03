@@ -21,7 +21,9 @@ import android.util.Log;
 import com.stfalcon.client.connection.*;
 import org.json.JSONObject;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by alexandr on 19.08.14.
@@ -31,12 +33,6 @@ public class SensorService extends Service implements SensorEventListener {
 
     private int NOTIFICATION = 1000;
     public WriteBinder binder = new WriteBinder();
-    public static final int TYPE_A = 0;   // ACCELEROMETER
-    public static final int TYPE_F = 1;   // FILTRATE_ACCELEROMETER
-    public static final int TYPE_L = 2;   // LINEAR_ACCELERATION
-    public static final int TYPE_G = 3;   // GRAVITY
-    private float[] motion = new float[3];
-    private float[] gravity = new float[3];
     private int activeSensorType;
 
     private SensorManager sensorManager;
@@ -47,7 +43,6 @@ public class SensorService extends Service implements SensorEventListener {
 
     private List<String> dataToSend = new ArrayList<String>();
     private long lastSendingTime = 0l;
-
 
 
     @Override
@@ -87,15 +82,9 @@ public class SensorService extends Service implements SensorEventListener {
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
 
-        // @todo ?
-        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
-        if (activeSensorType == TYPE_L) {
-            sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_UI);
-        }
-        if (activeSensorType == TYPE_G) {
-            sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SensorManager.SENSOR_DELAY_UI);
-        }
+        SensorHelper.registrateListener(this, sensorManager, activeSensorType);
     }
+
 
     /**
      * Викликається при натисканні на стоп. Вилучає лісенери і видаляє нотифікацію з статус бару
@@ -113,14 +102,21 @@ public class SensorService extends Service implements SensorEventListener {
     }
 
 
+
+
     /**
      * Додає до данних координати і айді девайсу. Після чого формує пакети і періодично передає на сервер
      */
-    public void sendNewData(final long time, String data, final int type) {
+    public void sendNewData(Object[] resultData) {
+
+        final long time = (Long) resultData[0];
+        String data = (String) resultData[1];
+        final int type = (Integer) resultData[2];
+
         if (createdConnectionWrapper) {
             if (type == activeSensorType && data != null) {
                 String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
-                data = data + loc + " " + String.valueOf(previousBestLocation.getSpeed() * 3.6)  + "\n";
+                data = data + loc + " " + String.valueOf(previousBestLocation.getSpeed() * 3.6) + "\n";
                 dataToSend.add(data);
 
                 if (time - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
@@ -153,16 +149,13 @@ public class SensorService extends Service implements SensorEventListener {
     private String createDeviceDescription(int type) {
         String stringType = "";
         switch (type) {
-            case TYPE_A:
+            case SensorHelper.TYPE_A:
                 stringType = "Accel";
                 break;
-            case TYPE_F:
-                stringType = "Filter-Accel";
-                break;
-            case TYPE_G:
+            case SensorHelper.TYPE_G:
                 stringType = "Gravity";
                 break;
-            case TYPE_L:
+            case SensorHelper.TYPE_L:
                 stringType = "Linear-Accel";
                 break;
         }
@@ -188,15 +181,9 @@ public class SensorService extends Service implements SensorEventListener {
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(android.R.drawable.stat_sys_upload)
                         .setContentTitle(getString(R.string.app_name))
+                        .setContentText(getString(R.string.send))
                         .setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION))
                         .setContentIntent(contentIntent);
-
-        // @todo можна забрати тайтл про файл
-        if (createdConnectionWrapper) {
-            mBuilder.setContentText(getString(R.string.send));
-        } else {
-            mBuilder.setContentText(getString(R.string.write));
-        }
 
         mBuilder.setAutoCancel(true);
         return mBuilder.build();
@@ -218,69 +205,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         long time = System.currentTimeMillis() - lastSendingTime;
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-
-
-            float x = Math.round(sensorEvent.values[0]);
-            float y = Math.round(sensorEvent.values[1]);
-            float z = Math.round(sensorEvent.values[2]);
-
-            // alpha is calculated as t / (t + dT)
-            // with t, the low-pass filter's time-constant
-            // and dT, the event delivery rate
-
-            final float alpha = 0.8f;
-
-            float gravity[] = new float[3];
-
-            float linear_acceleration[] = new float[3];
-
-            gravity[0] = alpha * gravity[0] + (1 - alpha) * sensorEvent.values[0];
-            gravity[1] = alpha * gravity[1] + (1 - alpha) * sensorEvent.values[1];
-            gravity[2] = alpha * gravity[2] + (1 - alpha) * sensorEvent.values[2];
-
-            linear_acceleration[0] = Math.round(sensorEvent.values[0] - gravity[0]);
-            linear_acceleration[1] = Math.round(sensorEvent.values[1] - gravity[1]);
-            linear_acceleration[2] = Math.round(sensorEvent.values[2] - gravity[2]);
-
-            String dataF = time + " " + linear_acceleration[0] + " " + linear_acceleration[1] + " " + linear_acceleration[2];
-            String dataA = time + " " + x + " " + y + " " + z;
-
-            //Log.i("Loger", dataA);
-
-            sendNewData(System.currentTimeMillis(), dataA, SensorService.TYPE_A);
-            sendNewData(System.currentTimeMillis(), dataF, SensorService.TYPE_F);
-
-
-        }
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-
-            float x = Math.round(sensorEvent.values[0]);
-            float y = Math.round(sensorEvent.values[1]);
-            float z = Math.round(sensorEvent.values[2]);
-
-            String dataL = time + " " + x + " " + y + " " + z;
-
-            sendNewData(System.currentTimeMillis(), dataL, SensorService.TYPE_L);
-
-        }
-
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_GRAVITY) {
-            for (int i = 0; i < 3; i++) {
-                gravity[i] = (float) (0.1 * sensorEvent.values[i] + 0.9 * gravity[i]);
-                motion[i] = sensorEvent.values[i] - gravity[i];
-            }
-
-            float x = Math.round(motion[0]);
-            float y = Math.round(motion[1]);
-            float z = Math.round(motion[2]);
-
-            String dataL = time + " " + x + " " + y + " " + z;
-
-            sendNewData(System.currentTimeMillis(), dataL, SensorService.TYPE_G);
-        }
+        sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
     }
 
     @Override
@@ -305,7 +230,9 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(final Location loc) {
             Log.i("Loger", "Location changed");
             previousBestLocation = loc;
-            //if (isBetterLocation(loc, previousBestLocation)) previousBestLocation = loc;
+            Intent intentTracking = new Intent(MyApplication.CONNECTED);
+            intentTracking.putExtra(MyApplication.SPEED, String.valueOf(loc.getSpeed()*3.6));
+            LocalBroadcastManager.getInstance(SensorService.this).sendBroadcast(intentTracking);
         }
 
         public void onProviderDisabled(String provider) {

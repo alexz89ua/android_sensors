@@ -16,7 +16,7 @@ import android.widget.Toast;
 public class MyActivity extends Activity implements View.OnClickListener {
 
     private Button start, stop, client;
-    private RadioButton accel, lAccel, fAccel, gravity;
+    private RadioButton accel, lAccel, gravity;
     private ServiceConnection sConn;
     private SensorService writeServise;
     private boolean bound = false;
@@ -36,30 +36,25 @@ public class MyActivity extends Activity implements View.OnClickListener {
         stop = (Button) findViewById(R.id.stop);
         client = (Button) findViewById(R.id.client);
         tvSpeed = (TextView) findViewById(R.id.speed);
-        accel = (RadioButton) findViewById(R.id.type_a);
-        fAccel = (RadioButton) findViewById(R.id.type_fa);
+        accel = (RadioButton) findViewById(R.id.type_a);;
         lAccel = (RadioButton) findViewById(R.id.type_la);
         gravity = (RadioButton) findViewById(R.id.type_g);
         start.setOnClickListener(this);
         stop.setOnClickListener(this);
         client.setOnClickListener(this);
         accel.setOnClickListener(this);
-        fAccel.setOnClickListener(this);
         lAccel.setOnClickListener(this);
         gravity.setOnClickListener(this);
 
 
         switch (MyApplication.getInstance().getSendedType()) {
-            case SensorService.TYPE_A:
+            case SensorHelper.TYPE_A:
                 accel.setChecked(true);
                 break;
-            case SensorService.TYPE_F:
-                fAccel.setChecked(true);
-                break;
-            case SensorService.TYPE_L:
+            case SensorHelper.TYPE_L:
                 lAccel.setChecked(true);
                 break;
-            case SensorService.TYPE_G:
+            case SensorHelper.TYPE_G:
                 gravity.setChecked(true);
                 break;
         }
@@ -127,19 +122,15 @@ public class MyActivity extends Activity implements View.OnClickListener {
                     break;
 
                 case R.id.type_a:
-                    MyApplication.getInstance().setSendetType(SensorService.TYPE_A);
-                    break;
-
-                case R.id.type_fa:
-                    MyApplication.getInstance().setSendetType(SensorService.TYPE_F);
+                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_A);
                     break;
 
                 case R.id.type_la:
-                    MyApplication.getInstance().setSendetType(SensorService.TYPE_L);
+                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_L);
                     break;
 
                 case R.id.type_g:
-                    MyApplication.getInstance().setSendetType(SensorService.TYPE_G);
+                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_G);
                     break;
 
             }
@@ -172,7 +163,6 @@ public class MyActivity extends Activity implements View.OnClickListener {
                     String speed = intent.getStringExtra(MyApplication.SPEED);
                     tvSpeed.setText(speed);
                     tvSpeed.invalidate();
-                   // Log.i("Loger", "SPEED " + speed);
                 }
             }
         };

@@ -56,12 +56,6 @@
                 <RadioButton
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:id="@+id/type_fa"
-                        android:text="FILTRATE_ACCELEROMETER"/>
-
-                <RadioButton
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
                         android:id="@+id/type_la"
                         android:text="LINEAR_ACCELERATION"/>
 
