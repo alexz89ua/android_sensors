@@ -39,6 +39,7 @@ public class SensorService extends Service implements SensorEventListener {
     public LocationManager locationManager;
     public MyLocationListener listener;
     public Location previousBestLocation = new Location("gps");
+    private double speed = 0.0f;
     private boolean createdConnectionWrapper = false;
 
     private List<String> dataToSend = new ArrayList<String>();
@@ -100,8 +101,6 @@ public class SensorService extends Service implements SensorEventListener {
             locationManager.removeUpdates(listener);
         }
     }
-
-
 
 
     /**
@@ -228,11 +227,9 @@ public class SensorService extends Service implements SensorEventListener {
     public class MyLocationListener implements LocationListener {
 
         public void onLocationChanged(final Location loc) {
-            Log.i("Loger", "Location changed");
+            Log.i("Loger", "Location changed, Accuracy = " + loc.getAccuracy());
             previousBestLocation = loc;
-            Intent intentTracking = new Intent(MyApplication.CONNECTED);
-            intentTracking.putExtra(MyApplication.SPEED, String.valueOf(loc.getSpeed()*3.6));
-            LocalBroadcastManager.getInstance(SensorService.this).sendBroadcast(intentTracking);
+            speed = loc.getSpeed() * 3.6;
         }
 
         public void onProviderDisabled(String provider) {

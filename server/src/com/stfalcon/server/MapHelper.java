@@ -28,6 +28,8 @@ public class MapHelper {
     private SeekBar seekBar;
     private ArrayList<Marker> markers = new ArrayList<Marker>();
 
+
+    public final double green = 13;
     public double green_pin = 13;
     public double yellow_pin = green_pin * 1.5;
 

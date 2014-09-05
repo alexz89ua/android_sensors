@@ -330,8 +330,8 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         if (write && bound) {
                             for (String device : devicesList) {
                                 writeServise.createFileToWrite(device);
-                                String dataToWrite = "time" + "\t\t\t\t\t\t\t\t\t\t\t" + "x" + "\t\t\t\t\t" + "y" + "\t\t\t\t" + "z" + "\t\t\t\t" + "sqr" +
-                                        "\t\t\t\t\t\t\t" + "lat" + "\t\t\t\t\t\t" + "lon" + "\t\t\t\t\t" + "speed" + "\n";
+                                String dataToWrite = "time" + "\t\t\t\t\t\t\t\t\t" + "x" + "\t\t\t\t\t" + "y" + "\t\t\t\t" + "z" + "\t\t\t\t" + "sqr" +
+                                        "\t\t\t\t\t\t\t" + "lat" + "\t\t\t\t\t\t" + "lon" + "\t\t\t\t\t" + "speed" + "\t\t\t" + "pitColor" + "\n";
                                 writeServise.writeToFile(device, dataToWrite);
                             }
                         }
@@ -391,20 +391,20 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
      */
     private void registerReceiver() {
 
-        IntentFilter intentFilter = new IntentFilter(SampleApplication.CONNECTED);
+        IntentFilter intentFilter = new IntentFilter(MyApplication.CONNECTED);
         mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                if (intent.hasExtra(SampleApplication.WIFI)) {
+                if (intent.hasExtra(MyApplication.WIFI)) {
                     startActivity(new Intent(Settings.ACTION_WIFI_SETTINGS));
                     return;
                 }
 
 
-                if (intent.hasExtra(SampleApplication.SENSOR)) {
+                if (intent.hasExtra(MyApplication.SENSOR)) {
 
-                    String device = intent.getStringExtra(SampleApplication.DEVICE);
+                    String device = intent.getStringExtra(MyApplication.DEVICE);
 
 
                     DeviceGraphInformation information = findDeviceOnGraph(device);
@@ -429,7 +429,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                     }
 
 
-                    String allData = intent.getStringExtra(SampleApplication.SENSOR);
+                    String allData = intent.getStringExtra(MyApplication.SENSOR);
                     tvConsole.setText(allData);
                     String[] datas = allData.split("\n");
 
@@ -447,7 +447,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         float x = Float.valueOf(arr[1]);
                         float y = Float.valueOf(arr[2]);
                         float z = Float.valueOf(arr[3]);
-                        float sqr = (float) Math.sqrt(x * x + y * y + z * z);
+                        float sqr = MyApplication.round((float)Math.sqrt(x * x + y * y + z * z),2);
 
                         long graphTime = sendingTime + readDataTime;
 
@@ -499,13 +499,13 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
                             }
 
-                            validatePit(pit);
+                            String pitColor = validatePit(pit);
 
                             if (write && bound) {
 
                                 String time = simpleDateFormat.format(System.currentTimeMillis());
                                 String dataToWrite = time + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
-                                        "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\n";
+                                        "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor +"\n";
                                 writeServise.writeToFile(getModel(device), dataToWrite);
                             }
 
@@ -557,16 +557,16 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                 }
 
 
-                if (intent.hasExtra(SampleApplication.STARTED)) {
+                if (intent.hasExtra(MyApplication.STARTED)) {
                     textView.setText("Start listening... \n");
                     //startActivity(new Intent(MyActivity.this, GraphicActivity.class));
                     return;
                 }
 
-                if (intent.hasExtra(SampleApplication.DEVICE)) {
+                if (intent.hasExtra(MyApplication.DEVICE)) {
 
                     Toast.makeText(MyActivity.this,
-                            intent.getStringExtra(SampleApplication.DEVICE),
+                            intent.getStringExtra(MyApplication.DEVICE),
                             Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(MyActivity.this,
@@ -587,34 +587,39 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
             tvSpeed.setText(speed.substring(0, speed.indexOf(".") + 2));
             this.speed = Float.valueOf(speed);
             if (cbAuto.isChecked() && this.speed > MIN_DELTA_SPEED) {
-                seekBarSensativity.setProgress((int) (mapHelper.green_pin - (mapHelper.green_pin / this.speed) * 3));
+                seekBarSensativity.setProgress((int) (mapHelper.green - ((mapHelper.green_pin / this.speed) * 3)));
+                //Log.i("Loger", "PROGRESS = " + seekBarSensativity.getProgress());
             }
         }
     }
 
 
 
-    private void validatePit(float pit) {
+    private String validatePit(float pit) {
 
         if (counter >= 1 && pit <= mapHelper.yellow_pin) {
             counter--;
-            return;
+            return "g";
         }
 
         if (pit < mapHelper.green_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter = 1;
+            return "g";
         }
 
         if (pit >= mapHelper.green_pin && pit <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
             counter = 15;
+            return "y";
         }
 
         if (pit > mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_red);
             counter = 15;
+            return "r";
         }
+        return null;
     }
 
 

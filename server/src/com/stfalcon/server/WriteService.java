@@ -36,7 +36,7 @@ public class WriteService extends Service {
     public void onCreate() {
         super.onCreate();
 
-        SampleApplication.getInstance().createConnectionWrapper(
+        MyApplication.getInstance().createConnectionWrapper(
                 new ConnectionWrapper.OnCreatedListener() {
                     @Override
                     public void onCreated() {
@@ -76,16 +76,16 @@ public class WriteService extends Service {
         int intaddr = wifi.getConnectionInfo().getIpAddress();
 
         if (wifi.getWifiState() == WifiManager.WIFI_STATE_DISABLED || intaddr == 0) {
-            Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-            intentTracking.putExtra(SampleApplication.WIFI, true);
+            Intent intentTracking = new Intent(MyApplication.CONNECTED);
+            intentTracking.putExtra(MyApplication.WIFI, true);
             LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
         } else {
             getConnectionWrapper().stopNetworkDiscovery();
             getConnectionWrapper().startServer();
             getConnectionWrapper().setHandler(mServerHandler);
 
-            Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-            intentTracking.putExtra(SampleApplication.STARTED, true);
+            Intent intentTracking = new Intent(MyApplication.CONNECTED);
+            intentTracking.putExtra(MyApplication.STARTED, true);
             LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
         }
     }
@@ -204,11 +204,11 @@ public class WriteService extends Service {
 
                     //Log.d("Loger", "mServerHandler have data");
                     final String deviceFrom = message.getString(Communication.Connect.DEVICE);
-                    final String data = message.getString(SampleApplication.SENSOR);
+                    final String data = message.getString(MyApplication.SENSOR);
 
-                    Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-                    intentTracking.putExtra(SampleApplication.DEVICE, "Device: " + deviceFrom);
-                    intentTracking.putExtra(SampleApplication.SENSOR, data);
+                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    intentTracking.putExtra(MyApplication.DEVICE, "Device: " + deviceFrom);
+                    intentTracking.putExtra(MyApplication.SENSOR, data);
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
 
                 }
@@ -217,8 +217,8 @@ public class WriteService extends Service {
                 if (type.equals(Communication.Connect.DEVICE)) {
                     final String deviceFrom = message.getString(Communication.Connect.DEVICE);
 
-                    Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-                    intentTracking.putExtra(SampleApplication.DEVICE, "Device: " + deviceFrom);
+                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    intentTracking.putExtra(MyApplication.DEVICE, "Device: " + deviceFrom);
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
 
                     getConnectionWrapper().send(
@@ -230,8 +230,8 @@ public class WriteService extends Service {
 
                 if (type.equals(Communication.Connect.SUCCESS)) {
 
-                    Intent intentTracking = new Intent(SampleApplication.CONNECTED);
-                    intentTracking.putExtra(SampleApplication.DEVICE, "connect");
+                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    intentTracking.putExtra(MyApplication.DEVICE, "connect");
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
 
                 }
@@ -247,7 +247,7 @@ public class WriteService extends Service {
         @Override
         public void onMessage(String type, JSONObject message) {
             if (type.equals(Communication.ConnectSuccess.TYPE)) {
-                Intent intentTracking = new Intent(SampleApplication.CONNECTED);
+                Intent intentTracking = new Intent(MyApplication.CONNECTED);
                 LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
                 createdConnectionWrapper = true;
             }
@@ -262,7 +262,7 @@ public class WriteService extends Service {
     }
 
     private ConnectionWrapper getConnectionWrapper() {
-        return SampleApplication.getInstance().getConnectionWrapper();
+        return MyApplication.getInstance().getConnectionWrapper();
     }
 }
 

@@ -22,7 +22,6 @@ public class MyActivity extends Activity implements View.OnClickListener {
     private boolean bound = false;
     private Intent intentService;
     private BroadcastReceiver mReceiver;
-    private TextView tvSpeed;
 
 
     /**
@@ -35,7 +34,6 @@ public class MyActivity extends Activity implements View.OnClickListener {
         start = (Button) findViewById(R.id.start);
         stop = (Button) findViewById(R.id.stop);
         client = (Button) findViewById(R.id.client);
-        tvSpeed = (TextView) findViewById(R.id.speed);
         accel = (RadioButton) findViewById(R.id.type_a);;
         lAccel = (RadioButton) findViewById(R.id.type_la);
         gravity = (RadioButton) findViewById(R.id.type_g);
@@ -157,12 +155,6 @@ public class MyActivity extends Activity implements View.OnClickListener {
                     Toast.makeText(MyActivity.this,
                             getString(R.string.connected),
                             Toast.LENGTH_LONG).show();
-                }
-
-                if (intent.hasExtra(MyApplication.SPEED)) {
-                    String speed = intent.getStringExtra(MyApplication.SPEED);
-                    tvSpeed.setText(speed);
-                    tvSpeed.invalidate();
                 }
             }
         };

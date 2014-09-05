@@ -57,9 +57,9 @@ public class SensorHelper {
         if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
 
 
-            float x = Math.round(sensorEvent.values[0]);
-            float y = Math.round(sensorEvent.values[1]);
-            float z = Math.round(sensorEvent.values[2]);
+            float x = MyApplication.round(sensorEvent.values[0],2);
+            float y = MyApplication.round(sensorEvent.values[1],2);
+            float z = MyApplication.round(sensorEvent.values[2],2);
 
             String dataA = time + " " + x + " " + y + " " + z;
             //Log.i("Loger", dataA);
@@ -75,9 +75,9 @@ public class SensorHelper {
 
         if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
 
-            float x = Math.round(sensorEvent.values[0]);
-            float y = Math.round(sensorEvent.values[1]);
-            float z = Math.round(sensorEvent.values[2]);
+            float x = MyApplication.round(sensorEvent.values[0],2);
+            float y = MyApplication.round(sensorEvent.values[1],2);
+            float z = MyApplication.round(sensorEvent.values[2],2);
 
             String dataL = time + " " + x + " " + y + " " + z;
 
@@ -97,9 +97,9 @@ public class SensorHelper {
                 motion[i] = sensorEvent.values[i] - gravity[i];
             }
 
-            float x = Math.round(motion[0]);
-            float y = Math.round(motion[1]);
-            float z = Math.round(motion[2]);
+            float x = MyApplication.round(motion[0],2);
+            float y = MyApplication.round(motion[1],2);
+            float z = MyApplication.round(motion[2],2);
 
             String dataG = time + " " + x + " " + y + " " + z;
 
