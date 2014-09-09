@@ -1,4 +1,4 @@
-package com.stfalcon.server;
+package com.stfalcon.server.view;
 
 import android.app.Activity;
 import com.octo.android.robospice.SpiceManager;

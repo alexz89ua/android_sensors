@@ -1,4 +1,4 @@
-package com.stfalcon.server;
+package com.stfalcon.server.view;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -7,7 +7,6 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
-import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.*;
@@ -22,7 +21,7 @@ import java.util.*;
  */
 public class OpenFileDialog extends AlertDialog.Builder {
 
-    private String currentPath = Environment.getExternalStorageDirectory().getPath();
+    private String currentPath = "/sdcard/AccelData";
     private List<File> files = new ArrayList<File>();
     private TextView title;
     private ListView listView;

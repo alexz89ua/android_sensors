@@ -181,7 +181,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/analytic_progress"
             android:layout_toRightOf="@+id/analytic"
-            android:layout_alignBaseline="@id/analytic"
+            android:layout_alignBottom="@id/analytic"
             android:visibility="gone"/>
 
 

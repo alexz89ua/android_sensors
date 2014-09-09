@@ -1,5 +1,6 @@
 package com.stfalcon.server;
 
+import android.util.Log;
 import com.octo.android.robospice.request.SpiceRequest;
 
 import java.io.*;
@@ -29,20 +30,31 @@ public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
         reader = new BufferedReader(new InputStreamReader(in));
         line = reader.readLine();
 
-        while (line != null){
+        do {
+            dataLines.add(MyApplication.removeTabs(line));
             line = reader.readLine();
-                dataLines.add(line);
-        }
+        } while (line != null);
+
+        /*Log.i("Loger", "Line =" + dataLines.get(1));
         in.close();
 
+        String[] arr = dataLines.get(1).split("\t", 9);
 
+        Log.i("Loger", "time = " + arr[0]);
+        Log.i("Loger", "x = " + arr[1]);
+        Log.i("Loger", "y = " + arr[2]);
+        Log.i("Loger", "z = " + arr[3]);
+        Log.i("Loger", "sqr = " + arr[4]);
+        Log.i("Loger", "lat = " + arr[5]);
+        Log.i("Loger", "lon = " + arr[6]);
+        Log.i("Loger", "speed = " + arr[7]);
+        Log.i("Loger", "color = " + arr[8]);*/
 
 
 
 
         return dataLines;
     }
-
 
 
 }

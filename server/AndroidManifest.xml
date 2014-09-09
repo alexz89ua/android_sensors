@@ -34,7 +34,7 @@
                 android:value="AIzaSyCYUs-ID90lDeZa9_c-joryQ8mldMjdeds"/>
 
         <activity
-                android:name="MyActivity"
+                android:name=".view.MyActivity"
                 android:label="@string/app_name"
                 android:screenOrientation="landscape">
             <intent-filter>

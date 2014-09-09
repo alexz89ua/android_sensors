@@ -1,4 +1,4 @@
-package com.stfalcon.server;
+package com.stfalcon.server.view;
 
 import android.content.*;
 import android.graphics.Bitmap;
@@ -13,6 +13,7 @@ import android.view.View;
 import android.widget.*;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
+import com.stfalcon.server.*;
 import com.stfalcon.server.service.WriteService;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -31,7 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class MyActivity extends BaseSpiceActivity  implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MyActivity extends BaseSpiceActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final static int MIN_VALUES_COUNT_PER_SECOND = 5;
     private final static int MAX_VALUES_COUNT_PER_SECOND = 30;
     private final static int MILLISECONDS_BEFORE_REFRESH_GRAPHS = 30;
@@ -513,7 +514,7 @@ public class MyActivity extends BaseSpiceActivity  implements View.OnClickListen
                                 writeServise.writeToFile(getModel(device), dataToWrite);
                             }
 
-                            mapHelper.addPoint(lat, lon, pit, speed, true);
+                            mapHelper.addPoint(lat, lon, pit, speed);
 
                         } catch (NumberFormatException e) {
                             e.printStackTrace();
@@ -855,10 +856,6 @@ public class MyActivity extends BaseSpiceActivity  implements View.OnClickListen
     }
 
 
-
-
-
-
     /**
      * RoboSpice ResultTask  listener
      */
@@ -873,6 +870,23 @@ public class MyActivity extends BaseSpiceActivity  implements View.OnClickListen
             analyticProgress.setVisibility(View.GONE);
             analytic.setEnabled(true);
             Toast.makeText(getApplicationContext(), "Ready lines " + result.size(), Toast.LENGTH_LONG).show();
+
+            double lat, lon, speed;
+            float pit;
+
+            int count = result.size();
+            for (int i = 1; i < count; i++) {
+                String[] arr = result.get(i).split("\t", 9);
+
+                pit = Float.valueOf(arr[4]);
+                lat = Double.valueOf(arr[5]);
+                lon = Double.valueOf(arr[6]);
+                speed = Double.valueOf(arr[7]);
+
+                mapHelper.addPoint(lat, lon, pit, speed);
+            }
+            mapFragment.setVisibility(View.VISIBLE);
+            showMap.setText("Hide Map");
         }
     }
 

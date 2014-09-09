@@ -51,4 +51,18 @@ public class MyApplication extends Application {
         return (float) (int) ((tmp - (int) tmp) >= 0.5f ? tmp + 1 : tmp) / pow;
     }
 
+
+    public static String removeTabs(String line) {
+
+        int charLength = line.length();
+        for (int i = 1; i < charLength; i++) {   // start from second char
+            if (line.charAt(i) == '\t' && line.charAt(i + 1) == '\t') {
+                line = line.substring(0, i) + "" + line.substring(i + 1);
+                charLength--;
+                i--;
+            }
+        }
+        return line;
+    }
+
 }
