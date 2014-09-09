@@ -1,6 +1,5 @@
 package com.stfalcon.server;
 
-import android.app.Activity;
 import android.content.*;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -12,6 +11,9 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+import com.octo.android.robospice.persistence.exception.SpiceException;
+import com.octo.android.robospice.request.listener.RequestListener;
+import com.stfalcon.server.service.WriteService;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
@@ -29,12 +31,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Random;
 
-public class MyActivity extends Activity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class MyActivity extends BaseSpiceActivity  implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final static int MIN_VALUES_COUNT_PER_SECOND = 5;
     private final static int MAX_VALUES_COUNT_PER_SECOND = 30;
     private final static int MILLISECONDS_BEFORE_REFRESH_GRAPHS = 30;
     public final static int MIN_DELTA_SPEED = 5;
-    private Button server, showMap, showConsole, writeToFile;
+    private Button server, showMap, showConsole, writeToFile, analytic;
+    private ProgressBar analyticProgress;
     private ServiceConnection sConn;
     private WriteService writeServise;
     private boolean bound = false, write = false;
@@ -65,8 +68,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     private GraphicalView graphicalView;
     private XYMultipleSeriesDataset dataSet = new XYMultipleSeriesDataset();
     private XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
-
-
+    private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
 
 
     /**
@@ -85,6 +87,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
         server = (Button) findViewById(R.id.server);
         showMap = (Button) findViewById(R.id.show_map);
+        analytic = (Button) findViewById(R.id.analytic);
         showConsole = (Button) findViewById(R.id.show_console);
         writeToFile = (Button) findViewById(R.id.write);
         textView = (TextView) findViewById(R.id.text);
@@ -97,8 +100,10 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         tvConsole = (TextView) findViewById(R.id.tv_console);
         cbAuto = (CheckBox) findViewById(R.id.cb_auto);
         seekBarSensativity = (SeekBar) findViewById(R.id.seek_bar);
+        analyticProgress = (ProgressBar) findViewById(R.id.analytic_progress);
 
         server.setOnClickListener(this);
+        analytic.setOnClickListener(this);
         showMap.setOnClickListener(this);
         showConsole.setOnClickListener(this);
         writeToFile.setOnClickListener(this);
@@ -170,9 +175,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
-
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -189,12 +191,9 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
     private void updateFilterValue() {
         tvFilterValue.setText(String.valueOf(filterValuePerSecond));
     }
-
-
 
 
     @Override
@@ -203,8 +202,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
         registerReceiver();
         bindService(intentService, sConn, BIND_AUTO_CREATE);
     }
-
-
 
 
     @Override
@@ -217,14 +214,11 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
     @Override
     protected void onPause() {
         super.onPause();
 
     }
-
 
 
     @Override
@@ -248,7 +242,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
     private void clearGraph() {
         if (graphicalView.isChartDrawn()) {
             renderer.removeAllRenderers();
@@ -259,8 +252,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
     @Override
     public void onClick(View view) {
         if (bound) {
@@ -268,6 +259,24 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
                 case R.id.server:
                     writeServise.startServer();
+                    break;
+
+                case R.id.analytic:
+                    OpenFileDialog fileDialog = new OpenFileDialog(this)
+                            .setFilter(".*\\.txt")
+                            .setFileIcon(getResources().getDrawable(R.drawable.txt))
+                            .setFolderIcon(getResources().getDrawable(R.drawable.folder))
+                            .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
+                                @Override
+                                public void OnSelectedFile(File file) {
+                                    Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
+                                    AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file);
+                                    getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
+                                    analyticProgress.setVisibility(View.VISIBLE);
+                                    analytic.setEnabled(false);
+                                }
+                            });
+                    fileDialog.show();
                     break;
 
                 case R.id.show_map:
@@ -348,8 +357,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
     private void makeScreenShot() {
         Bitmap bitmap;
         if (mapFragment.getVisibility() == View.VISIBLE) {
@@ -381,9 +388,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
             e.printStackTrace();
         }
     }
-
-
-
 
 
     /**
@@ -447,7 +451,7 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
                         float x = Float.valueOf(arr[1]);
                         float y = Float.valueOf(arr[2]);
                         float z = Float.valueOf(arr[3]);
-                        float sqr = MyApplication.round((float)Math.sqrt(x * x + y * y + z * z),2);
+                        float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
 
                         long graphTime = sendingTime + readDataTime;
 
@@ -505,25 +509,11 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
                                 String time = simpleDateFormat.format(System.currentTimeMillis());
                                 String dataToWrite = time + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
-                                        "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor +"\n";
+                                        "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
                                 writeServise.writeToFile(getModel(device), dataToWrite);
                             }
 
                             mapHelper.addPoint(lat, lon, pit, speed, true);
-
-                            /*if (information.xSeries.getItemCount() == 0){
-                                for (int i = 0; i < 1000; i++){
-                                    double demoLat, demoLon, demoSpeed;
-                                    float demoPit;
-
-                                    demoLat = lat + new Random().nextDouble() / 100;
-                                    demoLon = lon + new Random().nextDouble() / 100;
-                                    demoSpeed = speed + new Random(i).nextDouble() * 30;
-                                    demoPit = new Random().nextInt(30);
-
-                                    mapHelper.addPoint(demoLat, demoLon, demoPit, demoSpeed, false);
-                                }
-                            }*/
 
                         } catch (NumberFormatException e) {
                             e.printStackTrace();
@@ -579,20 +569,16 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
-
     private void showSpeed(String device, String speed) {
         if (device.equals(devicesList.get(0))) {
             tvSpeed.setText(speed.substring(0, speed.indexOf(".") + 2));
             this.speed = Float.valueOf(speed);
             if (cbAuto.isChecked() && this.speed > MIN_DELTA_SPEED) {
-                seekBarSensativity.setProgress((int) (mapHelper.green - ((mapHelper.green_pin / this.speed) * 3)));
+                seekBarSensativity.setProgress((int) (mapHelper.green - ((mapHelper.green_pin / this.speed) * 4)));
                 //Log.i("Loger", "PROGRESS = " + seekBarSensativity.getProgress());
             }
         }
     }
-
 
 
     private String validatePit(float pit) {
@@ -623,9 +609,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
-
     private DeviceGraphInformation findDeviceOnGraph(String device) {
         for (DeviceGraphInformation information : devices)
             if (information.device.equals(device))
@@ -633,8 +616,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
         return null;
     }
-
-
 
 
     private XYMultipleSeriesRenderer getDemoRenderer() {
@@ -665,15 +646,10 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
     }
 
 
-
-
-
     private XYMultipleSeriesDataset getDemoDataSet() {
         dataSet = new XYMultipleSeriesDataset();
         return dataSet;
     }
-
-
 
 
     private void createSeriesAndRendersForNewDevice(DeviceGraphInformation information) {
@@ -687,7 +663,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
             e.printStackTrace();
         }
     }
-
 
 
     private void createAndAddSqrSeriesAndRenderer(DeviceGraphInformation information) {
@@ -708,8 +683,6 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
             dataSet.addSeries(devices.size(), sqrSeries);
         }
     }
-
-
 
 
     private void createAndAddZSeriesAndRenderer(DeviceGraphInformation information) {
@@ -879,6 +852,28 @@ public class MyActivity extends Activity implements View.OnClickListener, Compou
 
     private String getModel(String device) {
         return device.substring(0, device.indexOf("-"));
+    }
+
+
+
+
+
+
+    /**
+     * RoboSpice ResultTask  listener
+     */
+    public final class OnResultTaskListener implements RequestListener<DataLines> {
+        @Override
+        public void onRequestFailure(SpiceException spiceException) {
+            Log.i("Loger", "Error: " + spiceException.getMessage());
+        }
+
+        @Override
+        public void onRequestSuccess(DataLines result) {
+            analyticProgress.setVisibility(View.GONE);
+            analytic.setEnabled(true);
+            Toast.makeText(getApplicationContext(), "Ready lines " + result.size(), Toast.LENGTH_LONG).show();
+        }
     }
 
 }

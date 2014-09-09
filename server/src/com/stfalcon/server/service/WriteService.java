@@ -1,4 +1,4 @@
-package com.stfalcon.server;
+package com.stfalcon.server.service;
 
 
 import android.app.Service;
@@ -11,6 +11,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import com.stfalcon.server.MyApplication;
 import com.stfalcon.server.connection.*;
 import org.json.JSONException;
 import org.json.JSONObject;

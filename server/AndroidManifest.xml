@@ -6,6 +6,7 @@
 
     <uses-sdk android:minSdkVersion="14"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <!-- Required to show current location -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -42,7 +43,11 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".WriteService"
+        <service android:name=".service.WriteService"
                  android:launchMode="singleTop"/>
+
+        <service
+                android:name=".service.RoadSpiceService"
+                android:exported="false"/>
     </application>
 </manifest>

@@ -19,6 +19,8 @@
     <orderEntry type="library" name="jmdns-3.4.1" level="project" />
     <orderEntry type="library" name="achartengine-1.2.0" level="project" />
     <orderEntry type="module" module-name="google-play-services_lib" />
+    <orderEntry type="library" name="robospice-cache-1.4.13" level="project" />
+    <orderEntry type="library" name="robospice-1.4.13" level="project" />
   </component>
 </module>
 
