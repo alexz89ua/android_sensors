@@ -8,6 +8,7 @@
 package com.stfalcon.server.DynamicTimeWarping;
 
 
+import android.util.Log;
 import com.stfalcon.server.DynamicTimeWarping.dtw.FastDTW;
 import com.stfalcon.server.DynamicTimeWarping.dtw.TimeWarpInfo;
 import com.stfalcon.server.DynamicTimeWarping.timeseries.TimeSeries;
@@ -39,7 +40,7 @@ public class FastDtwTest
       {
          if (args.length!=3 && args.length!=4)
          {
-            System.out.println("USAGE:  java FastDtwTest timeSeries1 timeSeries2 radius [EuclideanDistance|ManhattanDistance|BinaryDistance]");
+             Log.i("Loger","USAGE:  java FastDtwTest timeSeries1 timeSeries2 radius [EuclideanDistance|ManhattanDistance|BinaryDistance]");
             System.exit(1);
          }
          else
@@ -59,8 +60,8 @@ public class FastDtwTest
             
             final TimeWarpInfo info = FastDTW.getWarpInfoBetween(tsI, tsJ, Integer.parseInt(args[2]), distFn);
 
-            System.out.println("Warp Distance: " + info.getDistance());
-            System.out.println("Warp Path:     " + info.getPath());
+             Log.i("Loger", "Warp Distance: " + info.getDistance());
+             Log.i("Loger","Warp Path:     " + info.getPath());
          }  // end if
 
       }  // end main()

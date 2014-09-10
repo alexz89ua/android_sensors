@@ -29,10 +29,9 @@ public class MapHelper {
     private SeekBar seekBar;
     private ArrayList<Marker> markers = new ArrayList<Marker>();
 
-
     public final double green = 12;
     public double green_pin = 12;
-    public double yellow_pin = green_pin * 1.5;
+    public double yellow_pin = green_pin * 1.33;
 
     public MapHelper(MyActivity activity) {
         this.activity = activity;
@@ -88,12 +87,15 @@ public class MapHelper {
     public void addPoint(double lat, double lon, float pit, double speed) {
         // && speed > activity.MIN_DELTA_SPEED
         speed = speed * 3.6;  //toDO remove for new data
+
         if (needAddMarker(lat, lon)) {
 
             MarkerOptions options = new MarkerOptions();
             options.position(new LatLng(lat, lon));
+
             if (speed < 5){speed = 5;}
-            float bal = (float) ((green / speed) * 4 + pit);
+            float bal = (float) ((green / speed) * 5 + pit);
+
 
             if (bal < green_pin) {
                 options.icon(BitmapDescriptorFactory.fromResource(R.drawable.green_pin));
@@ -151,7 +153,7 @@ public class MapHelper {
                 float pit = Float.valueOf(arr[0]);
                 double speed = Double.valueOf(arr[1]) * 3.6;  //toDO remove for new data
                 if (speed < 5){speed = 5;}
-                float bal = (float) ((green / speed) * 4 + pit);
+                float bal = (float) ((green / speed) * 5 + pit);
 
                 if (bal < green_pin) {
                     marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.green_pin));
@@ -174,7 +176,7 @@ public class MapHelper {
 
     private void showValues(int green_pin) {
         this.green_pin = green_pin;
-        yellow_pin = green_pin * 1.5;
+        yellow_pin = green_pin * 1.33;
 
         ((TextView) activity.findViewById(R.id.green)).setText("< " + green_pin);
         ((TextView) activity.findViewById(R.id.yellow)).setText("> " + green_pin + " <" + yellow_pin);

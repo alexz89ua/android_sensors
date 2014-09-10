@@ -1,6 +1,7 @@
 package com.stfalcon.server;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,25 +13,30 @@ public class RoadTemplates {
 
     private InputStream in;
     private BufferedReader reader;
-    private String line;
+    private String line = "";
     private ArrayList<DataLines> templates = new ArrayList<DataLines>();
-    private File myFile = new File("/sdcard/AccelData/templates.txt");
+    private File myFile;
 
 
     public RoadTemplates(Context context) {
         try {
+            myFile = new File("/sdcard/AccelData/templates.txt");
             DataLines dataLines = new DataLines();
             in = new FileInputStream(myFile);
             reader = new BufferedReader(new InputStreamReader(in));
             line = reader.readLine();
+            Log.i("Loger", "Line = " + line);
 
             do {
                 dataLines.add(MyApplication.removeTabs(line));
                 line = reader.readLine();
-
-                if (line.equals("#")) {
-                    templates.add(dataLines);
+                Log.i("Loger", "Line = " + line);
+                if (line != null && line.contains("#")) {
+                    DataLines template = new DataLines();
+                    template.addAll(dataLines);
+                    templates.add(template);
                     dataLines.clear();
+                    Log.i("Loger", "Add template");
                 }
 
             } while (line != null);

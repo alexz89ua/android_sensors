@@ -54,6 +54,8 @@ public class MyApplication extends Application {
 
     public static String removeTabs(String line) {
 
+        if (line == null) return null;
+
         int charLength = line.length();
         for (int i = 1; i < charLength; i++) {   // start from second char
             if (line.charAt(i) == '\t' && line.charAt(i + 1) == '\t') {

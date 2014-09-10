@@ -1,6 +1,6 @@
 package com.stfalcon.server;
 
-import android.util.Log;
+import android.content.Context;
 import com.octo.android.robospice.request.SpiceRequest;
 
 import java.io.*;
@@ -9,20 +9,44 @@ import java.io.*;
  * Created by alexandr on 26.03.14.
  */
 public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
+    private final int ELEMENTS_IN_QWANT = 50;
     private InputStream in;
     private BufferedReader reader;
     private String line;
     private File file;
+    private Context context;
+    private File templateFile, dataFile;
+    private OutputStreamWriter outputStreamT, outputStreamD;
+    private FileOutputStream outT,outD;
+    private final String tempT = "/sdcard/AccelData/tempT.txt";
+    private final String tempD = "/sdcard/AccelData/tempD.txt";
 
 
-    public AnalyticBackgroundProcess(File data) {
+    public AnalyticBackgroundProcess(File data, Context context) {
         super(DataLines.class);
         this.setPriority(PRIORITY_HIGH);
         file = data;
+        this.context = context;
+        templateFile = new File(tempT);
+        dataFile = new File(tempD);
+        try {
+            templateFile.createNewFile();
+            dataFile.createNewFile();
+
+            outT = new FileOutputStream(templateFile);
+            outD = new FileOutputStream(dataFile);
+
+            outputStreamT = new OutputStreamWriter(outT);
+            outputStreamD = new OutputStreamWriter(outD);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
     public DataLines loadDataFromNetwork() throws Exception {
+
+       // RoadTemplates roadTemplates = new RoadTemplates(context);
 
         DataLines dataLines = new DataLines();
 
@@ -35,26 +59,64 @@ public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
             line = reader.readLine();
         } while (line != null);
 
-        /*Log.i("Loger", "Line =" + dataLines.get(1));
-        in.close();
+/*
+        int quantumCount = dataLines.size() / ELEMENTS_IN_QWANT;
+        int templateCount = roadTemplates.getTemplatesCount();
 
-        String[] arr = dataLines.get(1).split("\t", 9);
+        Log.i("Loger", "quantumCount = " + quantumCount);
+        Log.i("Loger", "templateCount = " + templateCount);
 
-        Log.i("Loger", "time = " + arr[0]);
-        Log.i("Loger", "x = " + arr[1]);
-        Log.i("Loger", "y = " + arr[2]);
-        Log.i("Loger", "z = " + arr[3]);
-        Log.i("Loger", "sqr = " + arr[4]);
-        Log.i("Loger", "lat = " + arr[5]);
-        Log.i("Loger", "lon = " + arr[6]);
-        Log.i("Loger", "speed = " + arr[7]);
-        Log.i("Loger", "color = " + arr[8]);*/
+        for (int templateNum = 0; templateNum < templateCount; templateNum++) {
 
+            for (int quantum = 1; quantum < quantumCount; quantum++) {
 
+                outputStreamT = new OutputStreamWriter(outT);
+                outputStreamD = new OutputStreamWriter(outD);
 
+                String compairLine = getQwantLine(dataLines, quantum);
+                String templateLine = getTemplateLine(roadTemplates.getTemplate(templateNum));
 
+                outputStreamD.write(compairLine);
+                outputStreamT.write(templateLine);
+
+                outputStreamD.close();
+                outputStreamT.close();
+
+                String[] args = {tempD, tempT, "20"};
+                Log.i("Loger", "compairLine = " + compairLine);
+                Log.i("Loger", "templateLine = " + templateLine);
+                Log.i("Loger", "args = " + args.length);
+                FastDtwTest.main(args);
+            }
+
+        }
+
+        roadTemplates.closeTemplate();*/
         return dataLines;
     }
 
+
+    private String getQwantLine(DataLines dataLines, int quantum){
+        String compairLine = "";
+        for (int i = quantum; i < quantum * ELEMENTS_IN_QWANT; i++) {
+            String[] arr = dataLines.get(i).split("\t", 9);
+            Float pit = Float.valueOf(arr[4]);
+            String point = i + "," + pit + "\n";
+            compairLine = compairLine + point;
+        }
+        return compairLine;
+    }
+
+    private String getTemplateLine(DataLines template){
+        String templateLine = "";
+        int linesCount = template.size();
+        for (int i = 0; i < linesCount; i++) {
+            String[] arr = template.get(i).split("\t", 9);
+            Float pit = Float.valueOf(arr[4]);
+            String point = i + "," + pit + "\n";
+            templateLine = templateLine + point;
+        }
+        return templateLine;
+    }
 
 }

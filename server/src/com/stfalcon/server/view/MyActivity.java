@@ -53,6 +53,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     public RelativeLayout rlSpeed;
     private LinearLayout llConsole;
     private TextView tvConsole;
+    private SoundManager soundManager;
     private View mDecorView;
     private SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     private ArrayList<String> devicesList = new ArrayList<String>();
@@ -72,6 +73,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
 
 
+
     /**
      * Called when the activity is first created.
      */
@@ -85,6 +87,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         mDecorView = getWindow().getDecorView();
 
         mapHelper = new MapHelper(this);
+        soundManager = new SoundManager();
 
         server = (Button) findViewById(R.id.server);
         showMap = (Button) findViewById(R.id.show_map);
@@ -271,7 +274,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                                 @Override
                                 public void OnSelectedFile(File file) {
                                     Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
-                                    AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file);
+                                    AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file, MyActivity.this);
                                     getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
                                     analyticProgress.setVisibility(View.VISIBLE);
                                     analytic.setEnabled(false);
@@ -504,7 +507,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                             }
 
-                            String pitColor = validatePit(pit);
+                            String pitColor = validatePit(pit, speed);
 
                             if (write && bound) {
 
@@ -582,28 +585,37 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     }
 
 
-    private String validatePit(float pit) {
+    private String validatePit(float pit, double speed) {
 
-        if (counter >= 1 && pit <= mapHelper.yellow_pin) {
+        speed = speed * 3.6;  //toDO remove for new data
+        if (speed < 5){speed = 5;}
+        float bal = (float) ((mapHelper.green / speed) + pit);
+
+
+        if (counter >= 1 && bal <= mapHelper.yellow_pin) {
             counter--;
             return "g";
         }
 
-        if (pit < mapHelper.green_pin) {
+        if (bal < mapHelper.green_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter = 1;
             return "g";
         }
 
-        if (pit >= mapHelper.green_pin && pit <= mapHelper.yellow_pin) {
+        if (pit >= mapHelper.green_pin && bal <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
             counter = 15;
+            soundManager.genTone(bal);
+            soundManager.playSound();
             return "y";
         }
 
-        if (pit > mapHelper.yellow_pin) {
+        if (bal > mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_red);
             counter = 15;
+            soundManager.genTone(bal);
+            soundManager.playSound();
             return "r";
         }
         return null;
