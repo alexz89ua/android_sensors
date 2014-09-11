@@ -73,7 +73,6 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
 
 
-
     /**
      * Called when the activity is first created.
      */
@@ -273,11 +272,14 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                             .setOpenDialogListener(new OpenFileDialog.OpenDialogListener() {
                                 @Override
                                 public void OnSelectedFile(File file) {
-                                    Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
-                                    AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file, MyActivity.this);
-                                    getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
-                                    analyticProgress.setVisibility(View.VISIBLE);
-                                    analytic.setEnabled(false);
+                                    if (analytic.isEnabled()) {
+                                        Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
+                                        AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file, MyActivity.this);
+                                        getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
+                                        analyticProgress.setVisibility(View.VISIBLE);
+                                        analytic.setEnabled(false);
+                                        Log.i("Loger", "OnSelectedFile " + file.getName());
+                                    }
                                 }
                             });
                     fileDialog.show();
@@ -588,7 +590,9 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private String validatePit(float pit, double speed) {
 
         speed = speed * 3.6;  //toDO remove for new data
-        if (speed < 5){speed = 5;}
+        if (speed < 5) {
+            speed = 5;
+        }
         float bal = (float) ((mapHelper.green / speed) + pit);
 
 

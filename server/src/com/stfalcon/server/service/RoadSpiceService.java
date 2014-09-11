@@ -32,9 +32,4 @@ public class RoadSpiceService extends SpiceService {
             }
         };
     }
-
-    @Override
-    public int getThreadCount() {
-        return 8;
-    }
 }
