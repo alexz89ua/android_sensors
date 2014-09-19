@@ -10,6 +10,8 @@ import android.hardware.SensorManager;
  */
 public class SensorHelper {
 
+    public static final int SENSOR_DELAY_36Hz = 27777; // in  microseconds
+
     public static final int TYPE_A = 0;   // ACCELEROMETER
     public static final int TYPE_L = 1;   // LINEAR_ACCELERATION
     public static final int TYPE_G = 2;   // GRAVITY
@@ -28,15 +30,15 @@ public class SensorHelper {
     public static void registrateListener(SensorEventListener listener, SensorManager sensorManager, int sensorType) {
         switch (sensorType) {
             case TYPE_L:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY_36Hz);
                 break;
 
             case TYPE_G:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SENSOR_DELAY_36Hz);
                 break;
 
             default:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_GAME);
+                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SENSOR_DELAY_36Hz);
                 break;
         }
     }

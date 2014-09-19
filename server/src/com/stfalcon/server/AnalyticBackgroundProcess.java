@@ -30,7 +30,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
 
         Log.i("Loger", "loadDataFromNetwork");
 
-        RoadTemplates roadTemplates = new RoadTemplates(context);
+        //RoadTemplates roadTemplates = new RoadTemplates(context);
 
         DataLines dataLines = new DataLines();
 
@@ -43,7 +43,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
             line = reader.readLine();
         } while (line != null);
 
-
+/*
         int quantumCount = dataLines.size() / ELEMENTS_IN_QWANT;
         int templateCount = roadTemplates.getTemplatesCount();
 
@@ -62,7 +62,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<DataLines> {
 
         }
 
-        roadTemplates.closeTemplate();
+        roadTemplates.closeTemplate();*/
         return dataLines;
     }
 

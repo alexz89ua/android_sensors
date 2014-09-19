@@ -216,7 +216,7 @@ public class Connection {
       } catch (Exception e) {
         Log.d(DEBUG_TAG, "Error: ", e);
       }
-      Log.d(DEBUG_TAG, "Client sent message: " + msg);
+      //Log.d(DEBUG_TAG, "Client sent message: " + msg);
     }
 
     /**

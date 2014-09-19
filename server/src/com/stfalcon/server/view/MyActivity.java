@@ -894,12 +894,14 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
             for (int i = 1; i < count; i++) {
                 String[] arr = result.get(i).split("\t", 9);
 
-                pit = Float.valueOf(arr[4]);
-                lat = Double.valueOf(arr[5]);
-                lon = Double.valueOf(arr[6]);
-                speed = Double.valueOf(arr[7]);
+                if (arr.length > 6) {
+                    pit = Float.valueOf(arr[4]);
+                    lat = Double.valueOf(arr[5]);
+                    lon = Double.valueOf(arr[6]);
+                    speed = Double.valueOf(arr[7]);
 
-                mapHelper.addPoint(lat, lon, pit, speed);
+                    mapHelper.addPoint(lat, lon, pit, speed);
+                }
             }
             mapFragment.setVisibility(View.VISIBLE);
             showMap.setText("Hide Map");

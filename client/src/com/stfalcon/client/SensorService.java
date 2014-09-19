@@ -30,6 +30,7 @@ import java.util.List;
  */
 public class SensorService extends Service implements SensorEventListener {
     private static final long SENDING_DATA_INTERVAL_IN_MILLIS = 1000;
+    private static final float MAXIMUM_POSSIBLE_ACCELERATION = 2.5f;
 
     private int NOTIFICATION = 1000;
     public WriteBinder binder = new WriteBinder();
@@ -39,7 +40,8 @@ public class SensorService extends Service implements SensorEventListener {
     public LocationManager locationManager;
     public MyLocationListener listener;
     public Location previousBestLocation = new Location("gps");
-    private double speed = 0.0f;
+    private double lastBestSpeed = 0.0f;
+    private long lastSpeedTime = 0;
     private boolean createdConnectionWrapper = false;
 
     private List<String> dataToSend = new ArrayList<String>();
@@ -115,7 +117,7 @@ public class SensorService extends Service implements SensorEventListener {
         if (createdConnectionWrapper) {
             if (type == activeSensorType && data != null) {
                 String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
-                data = data + loc + " " + String.valueOf(previousBestLocation.getSpeed() * 3.6) + "\n";
+                data = data + loc + " " + String.valueOf(validateSpeed(0)) + "\n";
                 dataToSend.add(data);
 
                 if (time - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
@@ -193,6 +195,27 @@ public class SensorService extends Service implements SensorEventListener {
         return binder;
     }
 
+
+    /**
+     * Рахує прискорення та визначає чи є воно адекватним
+     * @param speed перевирену на адекватність
+     * @return
+     */
+    private synchronized double validateSpeed(double speed){
+        if (speed != 0) {
+            double dV = speed - lastBestSpeed;
+            long dT = System.currentTimeMillis() - lastSpeedTime * 1000;
+            double a = dV / dT;
+            if (a < MAXIMUM_POSSIBLE_ACCELERATION) {
+                lastBestSpeed = speed;
+            }
+        }
+       return lastBestSpeed * 3.6;
+    }
+
+
+
+
     /**
      * Викликається при надходженні нових даних сенсора. Ініціалізує передачу даних до сервера
      */
@@ -229,7 +252,7 @@ public class SensorService extends Service implements SensorEventListener {
         public void onLocationChanged(final Location loc) {
             Log.i("Loger", "Location changed, Accuracy = " + loc.getAccuracy());
             previousBestLocation = loc;
-            speed = loc.getSpeed() * 3.6;
+            validateSpeed(loc.getSpeed());
         }
 
         public void onProviderDisabled(String provider) {

@@ -57,7 +57,7 @@ public class MyApplication extends Application {
         if (line == null) return null;
 
         int charLength = line.length();
-        for (int i = 1; i < charLength; i++) {   // start from second char
+        for (int i = 1; i < charLength - 1; i++) {   // start from second char
             if (line.charAt(i) == '\t' && line.charAt(i + 1) == '\t') {
                 line = line.substring(0, i) + "" + line.substring(i + 1);
                 charLength--;
