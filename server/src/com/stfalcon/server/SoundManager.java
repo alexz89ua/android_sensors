@@ -23,7 +23,7 @@ public class SoundManager {
     private final byte generatedSnd[] = new byte[2 * numSamples];
 
     public void genTone(double acc) {
-        freqOfTone = (acc / 40) * 1000 + 500;
+        freqOfTone = (acc * 10 / 40) * 1000 + 500;
         // fill out the array
         for (int i = 0; i < numSamples; ++i) {
             sample[i] = Math.sin(2 * Math.PI * i / (sampleRate / freqOfTone));

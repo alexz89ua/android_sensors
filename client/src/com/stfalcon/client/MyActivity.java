@@ -1,16 +1,19 @@
 package com.stfalcon.client;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.*;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.View;
+import android.view.*;
 import android.widget.Button;
 import android.widget.RadioButton;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class MyActivity extends Activity implements View.OnClickListener {
@@ -34,7 +37,8 @@ public class MyActivity extends Activity implements View.OnClickListener {
         start = (Button) findViewById(R.id.start);
         stop = (Button) findViewById(R.id.stop);
         client = (Button) findViewById(R.id.client);
-        accel = (RadioButton) findViewById(R.id.type_a);;
+        accel = (RadioButton) findViewById(R.id.type_a);
+        ;
         lAccel = (RadioButton) findViewById(R.id.type_la);
         gravity = (RadioButton) findViewById(R.id.type_g);
         start.setOnClickListener(this);
@@ -43,6 +47,9 @@ public class MyActivity extends Activity implements View.OnClickListener {
         accel.setOnClickListener(this);
         lAccel.setOnClickListener(this);
         gravity.setOnClickListener(this);
+
+        // no sleep fot this screen
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
 
         switch (MyApplication.getInstance().getSendedType()) {
@@ -76,6 +83,24 @@ public class MyActivity extends Activity implements View.OnClickListener {
 
     }
 
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.info:
+                showInfoDialog();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
 
     @Override
     public void onStart() {
@@ -159,6 +184,37 @@ public class MyActivity extends Activity implements View.OnClickListener {
             }
         };
         LocalBroadcastManager.getInstance(this).registerReceiver(mReceiver, intentFilter);
+    }
+
+
+    private void showInfoDialog() {
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        String sensorInfo = "TYPE_ACCELEROMETER - " + sensor.getName();
+        sensorInfo = sensorInfo + "\n" + "Version - " + sensor.getVersion();
+        sensorInfo = sensorInfo + "\n" + "Type - " + sensor.getType();
+        sensorInfo = sensorInfo + "\n" + "Vendor - " + sensor.getVendor();
+        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            sensorInfo = sensorInfo + "\n" + "FifoMaxEventCount - " + sensor.getFifoMaxEventCount();
+            sensorInfo = sensorInfo + "\n" + "FifoReservedEventCount - " + sensor.getFifoReservedEventCount();
+        }
+        sensorInfo = sensorInfo + "\n" + "MaximumRange - " + sensor.getMaximumRange();
+        sensorInfo = sensorInfo + "\n" + "MinDelay - " + sensor.getMinDelay() + " microsecond";
+        sensorInfo = sensorInfo + "\n" + "Power - " + sensor.getPower();
+        sensorInfo = sensorInfo + "\n" + "Resolution - " + sensor.getResolution();
+
+
+        final AlertDialog alertDialog = new AlertDialog.Builder(this).create();
+        alertDialog.setTitle(getString(R.string.info));
+        alertDialog.setMessage(sensorInfo);
+        alertDialog.setButton("OK", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                alertDialog.dismiss();
+            }
+        });
+        alertDialog.setIcon(android.R.drawable.ic_dialog_info);
+        alertDialog.show();
+
     }
 
 }

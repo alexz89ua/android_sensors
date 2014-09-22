@@ -9,6 +9,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.*;
+import com.stfalcon.server.entity.Pit;
 import com.stfalcon.server.view.MyActivity;
 
 import java.io.File;
@@ -29,8 +30,8 @@ public class MapHelper {
     private SeekBar seekBar;
     private ArrayList<Marker> markers = new ArrayList<Marker>();
 
-    public final double green = 12;
-    public double green_pin = 12;
+    public final double green = 2;
+    public double green_pin = 2;
     public double yellow_pin = green_pin * 1.33;
 
     public MapHelper(MyActivity activity) {
@@ -86,7 +87,6 @@ public class MapHelper {
 
     public void addPoint(double lat, double lon, float pit, double speed) {
         // && speed > activity.MIN_DELTA_SPEED
-        speed = speed * 3.6;  //toDO remove for new data
 
         if (needAddMarker(lat, lon)) {
 
@@ -94,7 +94,7 @@ public class MapHelper {
             options.position(new LatLng(lat, lon));
 
             if (speed < 5){speed = 5;}
-            float bal = (float) ((green / speed) * 5 + pit);
+            float bal = (float) Math.abs((green / speed) * 5 + pit);
 
 
             if (bal < green_pin) {
@@ -118,6 +118,48 @@ public class MapHelper {
             googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(
                     new CameraPosition.Builder().target(new LatLng(lat, lon))
                     .build()));
+
+        }
+    }
+
+
+
+    public void addPoint(Pit pit) {
+
+        if (needAddMarker(pit.lat, pit.lon)) {
+
+            MarkerOptions options = new MarkerOptions();
+            options.position(new LatLng(pit.lat, pit.lon));
+
+            if (pit.speed < 5){pit.speed = 5;}
+            float bal = (float) Math.abs(((green / pit.speed) * 5 + pit.acc));
+
+
+            if (bal < green_pin) {
+                options.icon(BitmapDescriptorFactory.fromResource(R.drawable.green_pin));
+            }
+
+            if (bal >= green_pin && pit.acc <= yellow_pin) {
+                options.icon(BitmapDescriptorFactory.fromResource(R.drawable.yellow_pin));
+            }
+
+            if (bal > yellow_pin) {
+                options.icon(BitmapDescriptorFactory.fromResource(R.drawable.red_pin));
+            }
+
+            String info = "speed: " + pit.speed + " | " + "\n";
+            info = info + "height: " + pit.sizeH + " | " + "\n";
+            info = info + "acc: " + pit.acc;
+
+            options.title(info);
+
+            Marker marker = googleMap.addMarker(options);
+            markers.add(marker);
+
+
+            googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(
+                    new CameraPosition.Builder().target(new LatLng(pit.lat, pit.lon))
+                            .build()));
 
         }
     }
@@ -151,9 +193,9 @@ public class MapHelper {
             try {
                 String[] arr = marker.getTitle().split(" ", 2);
                 float pit = Float.valueOf(arr[0]);
-                double speed = Double.valueOf(arr[1]) * 3.6;  //toDO remove for new data
+                double speed = Double.valueOf(arr[1]);
                 if (speed < 5){speed = 5;}
-                float bal = (float) ((green / speed) * 5 + pit);
+                float bal = (float) Math.abs(((green / speed) * 5 + pit));
 
                 if (bal < green_pin) {
                     marker.setIcon(BitmapDescriptorFactory.fromResource(R.drawable.green_pin));

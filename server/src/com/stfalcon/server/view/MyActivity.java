@@ -14,6 +14,9 @@ import android.widget.*;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 import com.stfalcon.server.*;
+import com.stfalcon.server.entity.DataLines;
+import com.stfalcon.server.entity.Pit;
+import com.stfalcon.server.entity.Pits;
 import com.stfalcon.server.service.WriteService;
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
@@ -451,15 +454,14 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     long lastTime = Long.valueOf(arr[0]);
                     sendingTime = currentTime - lastTime;
 
-                    for (String currentData : datas) {
-                        arr = currentData.split(" ", 7);
+                    for (int i = 0; i < datas.length; i++) {
+                        arr = datas[i].split(" ", 7);
                         long readDataTime = Long.valueOf(arr[0]);
                         float x = Float.valueOf(arr[1]);
                         float y = Float.valueOf(arr[2]);
                         float z = Float.valueOf(arr[3]);
                         float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
-
-                        long graphTime = sendingTime + readDataTime;
+                        long graphTime = sendingTime + (28 * (i + 1));
 
                         showSpeed(getModel(device), arr[6]);
 
@@ -504,7 +506,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                                     break;
                                 case R.id.rb_sqrt:
                                 default:
-                                    pit = sqr;
+                                    pit = y;
                                     break;
 
                             }
@@ -513,7 +515,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                             if (write && bound) {
 
-                                String time = simpleDateFormat.format(System.currentTimeMillis());
+                                String time = String.valueOf(System.currentTimeMillis() - readDataTime);
                                 String dataToWrite = time + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
                                         "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
                                 writeServise.writeToFile(getModel(device), dataToWrite);
@@ -564,10 +566,6 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     Toast.makeText(MyActivity.this,
                             intent.getStringExtra(MyApplication.DEVICE),
                             Toast.LENGTH_LONG).show();
-                } else {
-                    Toast.makeText(MyActivity.this,
-                            getString(R.string.connected),
-                            Toast.LENGTH_LONG).show();
                 }
             }
         };
@@ -588,12 +586,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
 
     private String validatePit(float pit, double speed) {
-
-        speed = speed * 3.6;  //toDO remove for new data
         if (speed < 5) {
             speed = 5;
         }
-        float bal = (float) ((mapHelper.green / speed) + pit);
+        float bal = (float) Math.abs((mapHelper.green / speed) + pit);
 
 
         if (counter >= 1 && bal <= mapHelper.yellow_pin) {
@@ -607,7 +603,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
             return "g";
         }
 
-        if (pit >= mapHelper.green_pin && bal <= mapHelper.yellow_pin) {
+        if (bal >= mapHelper.green_pin && bal <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
             counter = 15;
             soundManager.genTone(bal);
@@ -875,33 +871,21 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     /**
      * RoboSpice ResultTask  listener
      */
-    public final class OnResultTaskListener implements RequestListener<DataLines> {
+    public final class OnResultTaskListener implements RequestListener<Pits> {
         @Override
         public void onRequestFailure(SpiceException spiceException) {
             Log.i("Loger", "Error: " + spiceException.getMessage());
         }
 
         @Override
-        public void onRequestSuccess(DataLines result) {
+        public void onRequestSuccess(Pits result) {
             analyticProgress.setVisibility(View.GONE);
             analytic.setEnabled(true);
             Toast.makeText(getApplicationContext(), "Ready lines " + result.size(), Toast.LENGTH_LONG).show();
 
-            double lat, lon, speed;
-            float pit;
-
             int count = result.size();
             for (int i = 1; i < count; i++) {
-                String[] arr = result.get(i).split("\t", 9);
-
-                if (arr.length > 6) {
-                    pit = Float.valueOf(arr[4]);
-                    lat = Double.valueOf(arr[5]);
-                    lon = Double.valueOf(arr[6]);
-                    speed = Double.valueOf(arr[7]);
-
-                    mapHelper.addPoint(lat, lon, pit, speed);
-                }
+                    mapHelper.addPoint(result.get(i));
             }
             mapFragment.setVisibility(View.VISIBLE);
             showMap.setText("Hide Map");

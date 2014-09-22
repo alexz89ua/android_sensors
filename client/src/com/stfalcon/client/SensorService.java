@@ -30,6 +30,7 @@ import java.util.List;
  */
 public class SensorService extends Service implements SensorEventListener {
     private static final long SENDING_DATA_INTERVAL_IN_MILLIS = 1000;
+    private static final long CALIBRATION_INTERVAL_IN_MILLIS = 10000;
     private static final float MAXIMUM_POSSIBLE_ACCELERATION = 2.5f;
 
     private int NOTIFICATION = 1000;
@@ -42,10 +43,15 @@ public class SensorService extends Service implements SensorEventListener {
     public Location previousBestLocation = new Location("gps");
     private double lastBestSpeed = 0.0f;
     private long lastSpeedTime = 0;
+    private long startListeningTime = 0;
+    private float calibrationCoefficient = 0;
+    private ArrayList<Float> calibrationArray = new ArrayList<Float>();
     private boolean createdConnectionWrapper = false;
 
     private List<String> dataToSend = new ArrayList<String>();
     private long lastSendingTime = 0l;
+    private long lastGettingTime = 0l;
+    private int counter;
 
 
     @Override
@@ -86,6 +92,8 @@ public class SensorService extends Service implements SensorEventListener {
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
 
         SensorHelper.registrateListener(this, sensorManager, activeSensorType);
+
+        startListeningTime = System.currentTimeMillis();
     }
 
 
@@ -198,10 +206,11 @@ public class SensorService extends Service implements SensorEventListener {
 
     /**
      * Рахує прискорення та визначає чи є воно адекватним
-     * @param speed перевирену на адекватність
+     *
+     * @param speed перевірену на адекватність
      * @return
      */
-    private synchronized double validateSpeed(double speed){
+    private synchronized double validateSpeed(double speed) {
         if (speed != 0) {
             double dV = speed - lastBestSpeed;
             long dT = System.currentTimeMillis() - lastSpeedTime * 1000;
@@ -210,10 +219,8 @@ public class SensorService extends Service implements SensorEventListener {
                 lastBestSpeed = speed;
             }
         }
-       return lastBestSpeed * 3.6;
+        return lastBestSpeed * 3.6;
     }
-
-
 
 
     /**
@@ -221,13 +228,41 @@ public class SensorService extends Service implements SensorEventListener {
      */
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if (lastSendingTime == 0) {
-            lastSendingTime = System.currentTimeMillis();
+
+        if (calibrationCoefficient == 0) {
+
+            if (System.currentTimeMillis() < startListeningTime + CALIBRATION_INTERVAL_IN_MILLIS) {
+                calibrationArray.add(sensorEvent.values[1]);
+            } else {
+                float sum = 0;
+                int count = calibrationArray.size();
+                for (int i = 0; i < count; i++) {
+                    sum = sum + calibrationArray.get(i);
+                }
+                calibrationCoefficient = sum / count;
+                Log.i("Loger", "CALIBRATION_COEFFICIENT " + calibrationCoefficient);
+            }
+
+        } else {
+
+
+            if (lastSendingTime == 0) {
+                lastSendingTime = System.currentTimeMillis();
+                counter = 0;
+            }
+
+            long time = System.currentTimeMillis() - lastSendingTime;
+
+            lastGettingTime = System.currentTimeMillis();
+
+            counter++;
+
+            if (lastGettingTime - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
+                Log.i("Loger", "COUNT " + counter);
+                counter = 0;
+            }
+            sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time, calibrationCoefficient));
         }
-
-        long time = System.currentTimeMillis() - lastSendingTime;
-
-        sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
     }
 
     @Override
