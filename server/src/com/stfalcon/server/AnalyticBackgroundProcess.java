@@ -53,8 +53,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
 
                 pit.lat = Double.valueOf(arr[5]);
                 pit.lon = Double.valueOf(arr[6]);
-                //pit.speed = Double.valueOf(arr[7]);
-                pit.speed = Double.valueOf(arr[7]) / 3.6;
+                pit.speed = Double.valueOf(arr[7]);
                 pit.distance = pit.speed/3.6 * i / 36;
                 //pit.distance = pit.speed * i / 36;
                 pit.sizeH = (Math.abs(pit.acc) * 1000) / Math.pow(pit.speed, 1.58);

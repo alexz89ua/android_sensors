@@ -45,7 +45,9 @@ public class SensorService extends Service implements SensorEventListener {
     private long lastSpeedTime = 0;
     private long startListeningTime = 0;
     private float calibrationCoefficient = 0;
-    private ArrayList<Float> calibrationArray = new ArrayList<Float>();
+    private ArrayList<Float> calibrationArrayX = new ArrayList<Float>();
+    private ArrayList<Float> calibrationArrayY = new ArrayList<Float>();
+    private ArrayList<Float> calibrationArrayZ = new ArrayList<Float>();
     private boolean createdConnectionWrapper = false;
 
     private List<String> dataToSend = new ArrayList<String>();
@@ -232,12 +234,14 @@ public class SensorService extends Service implements SensorEventListener {
         if (calibrationCoefficient == 0) {
 
             if (System.currentTimeMillis() < startListeningTime + CALIBRATION_INTERVAL_IN_MILLIS) {
-                calibrationArray.add(sensorEvent.values[1]);
+                calibrationArrayX.add(sensorEvent.values[0]);
+                calibrationArrayY.add(sensorEvent.values[1]);
+                calibrationArrayZ.add(sensorEvent.values[2]);
             } else {
                 float sum = 0;
-                int count = calibrationArray.size();
+                int count = calibrationArrayY.size();
                 for (int i = 0; i < count; i++) {
-                    sum = sum + calibrationArray.get(i);
+                    sum = sum + calibrationArrayY.get(i);
                 }
                 calibrationCoefficient = sum / count;
                 Log.i("Loger", "CALIBRATION_COEFFICIENT " + calibrationCoefficient);
