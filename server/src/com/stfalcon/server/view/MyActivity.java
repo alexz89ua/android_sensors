@@ -549,7 +549,6 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                     }
 
-
                     renderer.setXAxisMin(System.currentTimeMillis() - 10000);
                     renderer.setXAxisMax(System.currentTimeMillis() + 500);
                     graphicalView.repaint();
@@ -596,9 +595,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
         double max = Collections.max(values);
 
+        values.clear();
+
 
         if (counter > 0 && max <= mapHelper.yellow_pin) {
-            rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter--;
             return "g";
         }
@@ -611,17 +611,17 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
         if (max >= mapHelper.green_pin && max <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
-            counter = 15;
-            /*soundManager.genTone(max);
-            soundManager.playSound();*/
+            counter = 40;
+            soundManager.genTone(max);
+            soundManager.playSound();
             return "y";
         }
 
         if (max > mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_red);
-            counter = 15;
-            /*soundManager.genTone(max);
-            soundManager.playSound();*/
+            counter = 40;
+            soundManager.genTone(max);
+            soundManager.playSound();
             return "r";
         }
         return null;
