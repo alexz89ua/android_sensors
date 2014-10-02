@@ -30,8 +30,8 @@ public class MapHelper {
     private SeekBar seekBar;
     private ArrayList<Marker> markers = new ArrayList<Marker>();
 
-    public final double green = 2;
-    public double green_pin = 2;
+    public final double green = 13;
+    public double green_pin = 13;
     public double yellow_pin = green_pin * 1.33;
 
     public MapHelper(MyActivity activity) {
@@ -131,19 +131,19 @@ public class MapHelper {
             MarkerOptions options = new MarkerOptions();
             options.position(new LatLng(pit.lat, pit.lon));
 
-            if (pit.speed < 5){pit.speed = 5;}
-            float bal = (float) Math.abs(((green / pit.speed) * 5 + pit.acc));
+            /*if (pit.speed < 5){pit.speed = 5;}
+            float bal = (float) Math.abs(((green / pit.speed) * 5 + pit.acc));*/
 
 
-            if (bal < green_pin) {
+            if (pit.sizeH < 2) {
                 options.icon(BitmapDescriptorFactory.fromResource(R.drawable.green_pin));
             }
 
-            if (bal >= green_pin && pit.acc <= yellow_pin) {
+            if (pit.sizeH >= 2 && pit.sizeH <= 4) {
                 options.icon(BitmapDescriptorFactory.fromResource(R.drawable.yellow_pin));
             }
 
-            if (bal > yellow_pin) {
+            if (pit.sizeH > 4) {
                 options.icon(BitmapDescriptorFactory.fromResource(R.drawable.red_pin));
             }
 

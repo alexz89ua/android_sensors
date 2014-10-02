@@ -33,6 +33,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Random;
 
 public class MyActivity extends BaseSpiceActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
@@ -74,6 +75,8 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private XYMultipleSeriesDataset dataSet = new XYMultipleSeriesDataset();
     private XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
     private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
+
+    private ArrayList<Double> values = new ArrayList<Double>();
 
 
     /**
@@ -511,7 +514,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                             }
 
-                            String pitColor = validatePit(pit, speed);
+                            String pitColor = validatePit(x,y,z);
 
                             if (write && bound) {
 
@@ -585,37 +588,40 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     }
 
 
-    private String validatePit(float pit, double speed) {
-        if (speed < 5) {
-            speed = 5;
-        }
-        float bal = (float) Math.abs((mapHelper.green / speed) + pit);
+    private String validatePit(double x,double y,double z) {
+
+        values.add(Math.abs(x));
+        values.add(Math.abs(y));
+        values.add(Math.abs(z));
+
+        double max = Collections.max(values);
 
 
-        if (counter >= 1 && bal <= mapHelper.yellow_pin) {
+        if (counter > 0 && max <= mapHelper.yellow_pin) {
+            rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter--;
             return "g";
         }
 
-        if (bal < mapHelper.green_pin) {
+        if (max < mapHelper.green_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter = 1;
             return "g";
         }
 
-        if (bal >= mapHelper.green_pin && bal <= mapHelper.yellow_pin) {
+        if (max >= mapHelper.green_pin && max <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
             counter = 15;
-            soundManager.genTone(bal);
-            soundManager.playSound();
+            /*soundManager.genTone(max);
+            soundManager.playSound();*/
             return "y";
         }
 
-        if (bal > mapHelper.yellow_pin) {
+        if (max > mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_red);
             counter = 15;
-            soundManager.genTone(bal);
-            soundManager.playSound();
+            /*soundManager.genTone(max);
+            soundManager.playSound();*/
             return "r";
         }
         return null;
