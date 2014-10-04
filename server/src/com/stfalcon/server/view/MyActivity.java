@@ -14,8 +14,6 @@ import android.widget.*;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 import com.stfalcon.server.*;
-import com.stfalcon.server.entity.DataLines;
-import com.stfalcon.server.entity.Pit;
 import com.stfalcon.server.entity.Pits;
 import com.stfalcon.server.service.WriteService;
 import org.achartengine.ChartFactory;
@@ -77,6 +75,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
 
     private ArrayList<Double> values = new ArrayList<Double>();
+    private String analizFileName;
 
 
     /**
@@ -284,6 +283,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                                         getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
                                         analyticProgress.setVisibility(View.VISIBLE);
                                         analytic.setEnabled(false);
+                                        analizFileName = file.getName();
                                         Log.i("Loger", "OnSelectedFile " + file.getName());
                                     }
                                 }
@@ -514,7 +514,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                             }
 
-                            String pitColor = validatePit(x,y,z);
+                            String pitColor = validatePit(x, y, z);
 
                             if (write && bound) {
 
@@ -587,7 +587,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     }
 
 
-    private String validatePit(double x,double y,double z) {
+    private String validatePit(double x, double y, double z) {
 
         values.add(Math.abs(x));
         values.add(Math.abs(y));
@@ -887,12 +887,35 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         public void onRequestSuccess(Pits result) {
             analyticProgress.setVisibility(View.GONE);
             analytic.setEnabled(true);
+
             Toast.makeText(getApplicationContext(), "Ready lines " + result.size(), Toast.LENGTH_LONG).show();
 
             int count = result.size();
+            ArrayList<Double> pitArray = new ArrayList<Double>();
+            writeServise.createFileToWriteResults(analizFileName);
+
+            //горуємо дані для запису файлу з результатами
+            double s = 0;
             for (int i = 1; i < count; i++) {
-                    mapHelper.addPoint(result.get(i));
+                mapHelper.addPoint(result.get(i));
+                pitArray.add(result.get(i).sizeH);
+                s += (i / 36) * (result.get(i).speed / 3.6);
+                String data = s + " " + result.get(i).acc + " " + result.get(i).speed + " " + result.get(i).sizeH + "\n";
+                writeServise.writeToFile(analizFileName, data);
             }
+
+            double sum = 0;
+            double sd_dat = 0;
+            for (int i = 0; i < pitArray.size(); i++) {
+                sum += pitArray.get(i);
+                sd_dat += (Math.pow(pitArray.get(i) - (sum / pitArray.size()), 2));
+            }
+
+            double sko_t = Math.sqrt((sd_dat / pitArray.size()));
+
+            writeServise.writeToFile(analizFileName, "\n");
+            writeServise.writeToFile(analizFileName, "max=" + Collections.max(pitArray) + " stDev=" + sko_t + " aVen=" + sum / result.size());
+            writeServise.stopWriteToFile();
             mapFragment.setVisibility(View.VISIBLE);
             showMap.setText("Hide Map");
         }

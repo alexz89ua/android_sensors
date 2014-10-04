@@ -102,13 +102,36 @@ public class WriteService extends Service {
 
         try {
 
-            File directory = new File("/sdcard/AccelData/");
+            File directory = new File("/sdcard/DCIM/UARoads/");
             directory.mkdirs();
 
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             String time = simpleDateFormat.format(System.currentTimeMillis());
 
-            File myFile = new File("/sdcard/AccelData/" + time + " " + device + ".txt");
+            File myFile = new File("/sdcard/DCIM/UARoads/" + time + " " + device + ".txt");
+            myFile.createNewFile();
+            FileOutputStream fOut = new FileOutputStream(myFile);
+
+            outputStream.put(device, new OutputStreamWriter(fOut));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     *
+     * @param device
+     */
+    public void createFileToWriteResults(String device){
+
+        try {
+
+            File directory = new File("/sdcard/DCIM/UARoads/Results");
+            directory.mkdirs();
+
+            File myFile = new File("/sdcard/DCIM/UARoads/Results" + device + "RESULT" +  ".txt");
             myFile.createNewFile();
             FileOutputStream fOut = new FileOutputStream(myFile);
 

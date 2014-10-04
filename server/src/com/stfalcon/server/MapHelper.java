@@ -126,7 +126,7 @@ public class MapHelper {
 
     public void addPoint(Pit pit) {
 
-        if (needAddMarker(pit.lat, pit.lon)) {
+        if (pit.acc > 5) {
 
             MarkerOptions options = new MarkerOptions();
             options.position(new LatLng(pit.lat, pit.lon));
