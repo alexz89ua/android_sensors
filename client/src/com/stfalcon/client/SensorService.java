@@ -30,7 +30,6 @@ import java.util.List;
  */
 public class SensorService extends Service implements SensorEventListener {
     private static final long SENDING_DATA_INTERVAL_IN_MILLIS = 1000;
-    private static final long CALIBRATION_INTERVAL_IN_MILLIS = 10000;
     private static final float MAXIMUM_POSSIBLE_ACCELERATION = 2.5f;
 
     private int NOTIFICATION = 1000;
@@ -44,10 +43,6 @@ public class SensorService extends Service implements SensorEventListener {
     private double lastBestSpeed = 0.0f;
     private long lastSpeedTime = 0;
     private long startListeningTime = 0;
-    private float calibrationCoefficient = 0;
-    private ArrayList<Float> calibrationArrayX = new ArrayList<Float>();
-    private ArrayList<Float> calibrationArrayY = new ArrayList<Float>();
-    private ArrayList<Float> calibrationArrayZ = new ArrayList<Float>();
     private boolean createdConnectionWrapper = false;
 
     private List<String> dataToSend = new ArrayList<String>();
@@ -128,16 +123,8 @@ public class SensorService extends Service implements SensorEventListener {
             if (type == activeSensorType && data != null) {
                 String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
                 data = data + loc + " " + String.valueOf(validateSpeed(0)) + "\n";
-                dataToSend.add(data);
 
-                if (time - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
-                    String stringData = "";
-
-                    for (String string : dataToSend) {
-                        stringData += string;
-                    }
-
-                    final String stringDataToSend = stringData;
+                    final String stringDataToSend = data;
 
                     getConnectionWrapper().send(
                             new HashMap<String, String>() {{
@@ -148,8 +135,6 @@ public class SensorService extends Service implements SensorEventListener {
                     );
 
                     lastSendingTime = time;
-                    dataToSend.clear();
-                }
             }
         }
     }
@@ -231,42 +216,23 @@ public class SensorService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
-        if (calibrationCoefficient == 0) {
-
-            if (System.currentTimeMillis() < startListeningTime + CALIBRATION_INTERVAL_IN_MILLIS) {
-                calibrationArrayX.add(sensorEvent.values[0]);
-                calibrationArrayY.add(sensorEvent.values[1]);
-                calibrationArrayZ.add(sensorEvent.values[2]);
-            } else {
-                float sum = 0;
-                int count = calibrationArrayY.size();
-                for (int i = 0; i < count; i++) {
-                    sum = sum + calibrationArrayY.get(i);
-                }
-                calibrationCoefficient = sum / count;
-                Log.i("Loger", "CALIBRATION_COEFFICIENT " + calibrationCoefficient);
-            }
-
-        } else {
-
-
-            if (lastSendingTime == 0) {
-                lastSendingTime = System.currentTimeMillis();
-                counter = 0;
-            }
-
-            long time = System.currentTimeMillis() - lastSendingTime;
-
-            lastGettingTime = System.currentTimeMillis();
-
-            counter++;
-
-            if (lastGettingTime - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
-                Log.i("Loger", "COUNT " + counter);
-                counter = 0;
-            }
-            sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time, calibrationCoefficient));
+        if (lastSendingTime == 0) {
+            lastSendingTime = System.currentTimeMillis();
+            counter = 0;
         }
+
+        long time = System.currentTimeMillis() - lastSendingTime;
+
+        lastGettingTime = System.currentTimeMillis();
+
+        counter++;
+
+        if (lastGettingTime - lastSendingTime > SENDING_DATA_INTERVAL_IN_MILLIS) {
+            Log.i("Loger", "COUNT " + counter);
+            counter = 0;
+        }
+        sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
+
     }
 
     @Override

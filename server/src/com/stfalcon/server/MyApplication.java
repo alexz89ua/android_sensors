@@ -10,7 +10,7 @@ import com.stfalcon.server.connection.ConnectionWrapper;
  * @version 1.0
  */
 public class MyApplication extends Application {
-    public static final String CONNECTED = "com.example.sasha.CONNECTED";
+    public static final String MESSAGE = "com.example.sasha.MESSAGE";
     public static final String DATA = "com.example.sasha.DATA";
     public static final String DEVICE = "device";
     public static final String WIFI = "wifi";

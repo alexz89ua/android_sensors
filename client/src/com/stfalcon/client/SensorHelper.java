@@ -73,7 +73,7 @@ public class SensorHelper {
      * String result[1] - оброблені дані сенсора,
      * int    result[2] - тип сенсора
      */
-    public static Object[] analyzeSensorEvent(SensorEvent sensorEvent, long time, float calibration) {
+    public static Object[] analyzeSensorEvent(SensorEvent sensorEvent, long time) {
 
         Object[] result = new Object[3];
 
@@ -81,7 +81,7 @@ public class SensorHelper {
 
 
             float x = MyApplication.round(sensorEvent.values[0], 2);
-            float y = MyApplication.round(sensorEvent.values[1] - calibration, 2);
+            float y = MyApplication.round(sensorEvent.values[1], 2);
             float z = MyApplication.round(sensorEvent.values[2], 2);
 
             String dataA = time + " " + x + " " + y + " " + z;

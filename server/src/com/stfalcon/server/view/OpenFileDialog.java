@@ -21,7 +21,7 @@ import java.util.*;
  */
 public class OpenFileDialog extends AlertDialog.Builder {
 
-    private String currentPath = "/sdcard/AccelData";
+    private String currentPath = "/sdcard/DCIM/UARoads";
     private List<File> files = new ArrayList<File>();
     private TextView title;
     private ListView listView;

@@ -182,7 +182,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         updateFilterValue();
     }
 
-
+    /**
+     * Реалізація FULL SCREEN
+     * @param hasFocus
+     */
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
@@ -407,7 +410,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
      */
     private void registerReceiver() {
 
-        IntentFilter intentFilter = new IntentFilter(MyApplication.CONNECTED);
+        IntentFilter intentFilter = new IntentFilter(MyApplication.MESSAGE);
         mReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -446,25 +449,24 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
 
                     String allData = intent.getStringExtra(MyApplication.SENSOR);
-                    tvConsole.setText(allData);
-                    String[] datas = allData.split("\n");
+                    String consolText = tvConsole.getText().toString();
+                    if (consolText.length() > 800) { consolText = "";}
+                    tvConsole.setText(consolText + allData);
 
 
                     long sendingTime;
 
-                    String data = datas[datas.length - 1];
-                    String[] arr = data.split(" ", 7);
+                    String[] arr = allData.split(" ", 7);
                     long lastTime = Long.valueOf(arr[0]);
                     sendingTime = currentTime - lastTime;
 
-                    for (int i = 0; i < datas.length; i++) {
-                        arr = datas[i].split(" ", 7);
+                        arr = allData.split(" ", 7);
                         long readDataTime = Long.valueOf(arr[0]);
                         float x = Float.valueOf(arr[1]);
                         float y = Float.valueOf(arr[2]);
                         float z = Float.valueOf(arr[3]);
                         float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
-                        long graphTime = sendingTime + (28 * (i + 1));
+                        long graphTime = sendingTime + (28);
 
                         showSpeed(getModel(device), arr[6]);
 
@@ -547,7 +549,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         //TODO:
                         information.lffSeries.add(graphTime, lff);
 
-                    }
+
 
                     renderer.setXAxisMin(System.currentTimeMillis() - 10000);
                     renderer.setXAxisMax(System.currentTimeMillis() + 500);

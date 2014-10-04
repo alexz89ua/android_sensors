@@ -77,7 +77,7 @@ public class WriteService extends Service {
         int intaddr = wifi.getConnectionInfo().getIpAddress();
 
         if (wifi.getWifiState() == WifiManager.WIFI_STATE_DISABLED || intaddr == 0) {
-            Intent intentTracking = new Intent(MyApplication.CONNECTED);
+            Intent intentTracking = new Intent(MyApplication.MESSAGE);
             intentTracking.putExtra(MyApplication.WIFI, true);
             LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
         } else {
@@ -85,7 +85,7 @@ public class WriteService extends Service {
             getConnectionWrapper().startServer();
             getConnectionWrapper().setHandler(mServerHandler);
 
-            Intent intentTracking = new Intent(MyApplication.CONNECTED);
+            Intent intentTracking = new Intent(MyApplication.MESSAGE);
             intentTracking.putExtra(MyApplication.STARTED, true);
             LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
         }
@@ -131,7 +131,7 @@ public class WriteService extends Service {
             File directory = new File("/sdcard/DCIM/UARoads/Results");
             directory.mkdirs();
 
-            File myFile = new File("/sdcard/DCIM/UARoads/Results" + device + "RESULT" +  ".txt");
+            File myFile = new File("/sdcard/DCIM/UARoads/Results/" + device + "RESULT" +  ".txt");
             myFile.createNewFile();
             FileOutputStream fOut = new FileOutputStream(myFile);
 
@@ -230,7 +230,7 @@ public class WriteService extends Service {
                     final String deviceFrom = message.getString(Communication.Connect.DEVICE);
                     final String data = message.getString(MyApplication.SENSOR);
 
-                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    Intent intentTracking = new Intent(MyApplication.MESSAGE);
                     intentTracking.putExtra(MyApplication.DEVICE, "Device: " + deviceFrom);
                     intentTracking.putExtra(MyApplication.SENSOR, data);
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
@@ -241,7 +241,7 @@ public class WriteService extends Service {
                 if (type.equals(Communication.Connect.DEVICE)) {
                     final String deviceFrom = message.getString(Communication.Connect.DEVICE);
 
-                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    Intent intentTracking = new Intent(MyApplication.MESSAGE);
                     intentTracking.putExtra(MyApplication.DEVICE, "Device: " + deviceFrom);
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
 
@@ -254,7 +254,7 @@ public class WriteService extends Service {
 
                 if (type.equals(Communication.Connect.SUCCESS)) {
 
-                    Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                    Intent intentTracking = new Intent(MyApplication.MESSAGE);
                     intentTracking.putExtra(MyApplication.DEVICE, "connect");
                     LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
 
@@ -271,7 +271,7 @@ public class WriteService extends Service {
         @Override
         public void onMessage(String type, JSONObject message) {
             if (type.equals(Communication.ConnectSuccess.TYPE)) {
-                Intent intentTracking = new Intent(MyApplication.CONNECTED);
+                Intent intentTracking = new Intent(MyApplication.MESSAGE);
                 LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
                 createdConnectionWrapper = true;
             }
