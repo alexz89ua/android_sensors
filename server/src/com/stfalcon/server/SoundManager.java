@@ -22,6 +22,10 @@ public class SoundManager {
 
     private final byte generatedSnd[] = new byte[2 * numSamples];
 
+    /**
+     *
+     * @param acc
+     */
     public void genTone(double acc) {
         freqOfTone = (acc / 40) * 1000 + 500;
         // fill out the array
@@ -39,6 +43,10 @@ public class SoundManager {
         }
     }
 
+
+    /**
+     *
+     */
     public void playSound() {
         AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
                 8000, AudioFormat.CHANNEL_CONFIGURATION_MONO,
@@ -57,6 +65,10 @@ public class SoundManager {
         }
     }
 
+
+    /**
+     *
+     */
     private void releaseAllTracks() {
         for (AudioTrack audioTrack : audioTracks) {
             audioTrack.release();

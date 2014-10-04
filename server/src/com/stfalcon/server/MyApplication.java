@@ -34,15 +34,31 @@ public class MyApplication extends Application {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
+
+    /**
+     *
+     * @param listener
+     */
     public void createConnectionWrapper(ConnectionWrapper.OnCreatedListener listener) {
         mConnectionWrapper = new ConnectionWrapper(getApplicationContext(), listener);
     }
 
+
+    /**
+     *
+     * @return
+     */
     public ConnectionWrapper getConnectionWrapper() {
         return mConnectionWrapper;
     }
 
 
+    /**
+     *
+     * @param number
+     * @param scale
+     * @return
+     */
     public static float round(double number, int scale) {
         int pow = 10;
         for (int i = 1; i < scale; i++)
@@ -52,6 +68,11 @@ public class MyApplication extends Application {
     }
 
 
+    /**
+     *
+     * @param line
+     * @return
+     */
     public static String removeTabs(String line) {
 
         if (line == null) return null;
