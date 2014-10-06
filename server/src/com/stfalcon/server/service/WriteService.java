@@ -128,7 +128,7 @@ public class WriteService extends Service {
 
         try {
 
-            File directory = new File("/sdcard/DCIM/UARoads/Results");
+            File directory = new File("/sdcard/DCIM/UARoads/Results/");
             directory.mkdirs();
 
             File myFile = new File("/sdcard/DCIM/UARoads/Results/" + device + "RESULT" +  ".txt");

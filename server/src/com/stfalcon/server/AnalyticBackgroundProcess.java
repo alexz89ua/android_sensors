@@ -16,6 +16,7 @@ import java.util.Collections;
  */
 public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
     private int ELEMENTS_IN_MINUTE = 2000;
+    private int MIN_ACTUAL_SPEED = 15;
     private InputStream in;
     private BufferedReader reader;
     private String line;
@@ -112,7 +113,6 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
                     "Z_MAX_ELEMENTS_COUNT = " + Z_MAX_ELEMENTS_COUNT.size());
 
 
-
             // розраховуємо параметри нерівностей згідно обраної осі
             for (int i = 1; i < linesCount; i++) {
                 String[] arr = dataLines.get(i).split("\t", 9);
@@ -125,8 +125,11 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
                     pit.lon = Double.valueOf(arr[6]);
                     pit.speed = MyApplication.round(Double.valueOf(arr[7]), 2);
                     pit.distance = pit.speed / 3.6 * i / 36;
-                    pit.sizeH = MyApplication.round((Math.abs(pit.acc) * 100) / Math.pow(pit.speed, 1.58), 2);
-                    pits.add(pit);
+                    pit.sizeH = Math.pow(1 + (pit.speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(pit.acc) * 100) / Math.pow(pit.speed, 1.58), 2));
+
+                    if (pit.speed > MIN_ACTUAL_SPEED) {
+                        pits.add(pit);
+                    }
 
                 }
             }
