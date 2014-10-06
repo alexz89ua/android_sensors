@@ -78,6 +78,9 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private String analizFileName;
 
 
+    private long currentCounter = 0;
+
+
     /**
      * Called when the activity is first created.
      */
@@ -349,6 +352,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                 case R.id.write:
                     if (!write) {
+
                         writeToFile.setText("Stop write");
                         write = true;
                         if (write && bound) {
@@ -362,8 +366,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     } else {
                         writeToFile.setText("Write to file");
                         write = false;
+                        currentCounter = 0;
                         if (bound) {
                             writeServise.stopWriteToFile();
+
                         }
                     }
                     break;
@@ -521,9 +527,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                             if (write && bound) {
 
                                 String time = String.valueOf(System.currentTimeMillis() - readDataTime);
-                                String dataToWrite = time + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
+                                String dataToWrite = currentCounter + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
                                         "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
                                 writeServise.writeToFile(getModel(device), dataToWrite);
+                                currentCounter++;
                             }
 
                             mapHelper.addPoint(lat, lon, pit, speed);

@@ -51,10 +51,15 @@ public class SensorService extends Service implements SensorEventListener {
     private int counter;
 
 
+    //private TookThePhone tookThePhone;
+
+
     @Override
     public void onCreate() {
         super.onCreate();
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+
+    //    tookThePhone = new TookThePhone();
 
         // @todo ?
         MyApplication.getInstance().createConnectionWrapper(
@@ -88,6 +93,7 @@ public class SensorService extends Service implements SensorEventListener {
         locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, listener);
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
 
+    //    tookThePhone.registrateListener(this, sensorManager);
         SensorHelper.registrateListener(this, sensorManager, activeSensorType);
 
         startListeningTime = System.currentTimeMillis();
@@ -101,6 +107,8 @@ public class SensorService extends Service implements SensorEventListener {
         Log.v("Loger", "STOP_DONE");
 
         sensorManager.unregisterListener(this);
+
+    //    tookThePhone.stopWriteToFile();
 
         stopForeground(true);
 
@@ -124,17 +132,17 @@ public class SensorService extends Service implements SensorEventListener {
                 String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
                 data = data + loc + " " + String.valueOf(validateSpeed(0)) + "\n";
 
-                    final String stringDataToSend = data;
+                final String stringDataToSend = data;
 
-                    getConnectionWrapper().send(
-                            new HashMap<String, String>() {{
-                                put(Communication.MESSAGE_TYPE, Communication.Connect.DATA);
-                                put(Communication.Connect.DEVICE, createDeviceDescription(type));
-                                put(MyApplication.SENSOR, stringDataToSend);
-                            }}
-                    );
+                getConnectionWrapper().send(
+                        new HashMap<String, String>() {{
+                            put(Communication.MESSAGE_TYPE, Communication.Connect.DATA);
+                            put(Communication.Connect.DEVICE, createDeviceDescription(type));
+                            put(MyApplication.SENSOR, stringDataToSend);
+                        }}
+                );
 
-                    lastSendingTime = time;
+                lastSendingTime = time;
             }
         }
     }
@@ -231,7 +239,12 @@ public class SensorService extends Service implements SensorEventListener {
             Log.i("Loger", "COUNT " + counter);
             counter = 0;
         }
-        sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
+
+        if (sensorEvent.sensor.getType() != Sensor.TYPE_ORIENTATION) {
+            sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
+        } else {
+   ///         tookThePhone.analyzeSensorEvent(sensorEvent);
+        }
 
     }
 
