@@ -16,7 +16,7 @@ import java.util.Collections;
  */
 public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
     private int ELEMENTS_IN_MINUTE = 2000;
-    private int MIN_ACTUAL_SPEED = 15;
+    private int MIN_ACTUAL_SPEED = 10;
     private InputStream in;
     private BufferedReader reader;
     private String line;
@@ -32,6 +32,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
     public AnalyticBackgroundProcess(File data, Context context) {
         super(Pits.class);
         file = data;
+        pits.filename = file.getName();
         this.context = context;
     }
 
@@ -66,30 +67,37 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
 
             // знаходимо число максимальних значень по кожній з осей
             for (int i = 1; i < ELEMENTS_IN_MINUTE; i++) {
-                String[] arr = dataLines.get(i).split("\t", 9);
 
-                double x = Math.abs(Double.valueOf(arr[1]));
-                double y = Math.abs(Double.valueOf(arr[2]));
-                double z = Math.abs(Double.valueOf(arr[3]));
+                try {
 
-                values.add(x);
-                values.add(y);
-                values.add(z);
+                    String[] arr = dataLines.get(i).split("\t", 9);
 
-                double max = Collections.max(values);
+                    double x = Math.abs(Double.valueOf(arr[1]));
+                    double y = Math.abs(Double.valueOf(arr[2]));
+                    double z = Math.abs(Double.valueOf(arr[3]));
 
-                values.clear();
+                    values.add(x);
+                    values.add(y);
+                    values.add(z);
 
-                if (max == x) {
-                    X_MAX_ELEMENTS_COUNT.add(x);
-                }
+                    double max = Collections.max(values);
 
-                if (max == y) {
-                    Y_MAX_ELEMENTS_COUNT.add(y);
-                }
+                    values.clear();
 
-                if (max == z) {
-                    Z_MAX_ELEMENTS_COUNT.add(z);
+                    if (max == x) {
+                        X_MAX_ELEMENTS_COUNT.add(x);
+                    }
+
+                    if (max == y) {
+                        Y_MAX_ELEMENTS_COUNT.add(y);
+                    }
+
+                    if (max == z) {
+                        Z_MAX_ELEMENTS_COUNT.add(z);
+                    }
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Log.i("Loger", "Exception parsing");
                 }
             }
 
@@ -108,29 +116,35 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
                 targetValues = 3;
                 Log.i("Loger", "targetValues Z");
             }
-            Log.i("Loger", "X_MAX_ELEMENTS_COUNT = " + X_MAX_ELEMENTS_COUNT.size() + " " +
+            Log.i("Loger", "Name - " + pits.filename + "\n" +
+                    "X_MAX_ELEMENTS_COUNT = " + X_MAX_ELEMENTS_COUNT.size() + " " +
                     "Y_MAX_ELEMENTS_COUNT = " + Y_MAX_ELEMENTS_COUNT.size() + " " +
                     "Z_MAX_ELEMENTS_COUNT = " + Z_MAX_ELEMENTS_COUNT.size());
 
 
             // розраховуємо параметри нерівностей згідно обраної осі
-            for (int i = 1; i < linesCount; i++) {
-                String[] arr = dataLines.get(i).split("\t", 9);
+            for (int j = 1; j < linesCount; j++) {
+                try {
+                    String[] arr = dataLines.get(j).split("\t", 9);
 
-                if (arr.length > 4) {
-                    Pit pit = new Pit();
+                    if (arr.length > 4) {
+                        Pit pit = new Pit();
 
-                    pit.acc = Math.abs(Double.valueOf(arr[targetValues]));
-                    pit.lat = Double.valueOf(arr[5]);
-                    pit.lon = Double.valueOf(arr[6]);
-                    pit.speed = MyApplication.round(Double.valueOf(arr[7]), 2);
-                    pit.distance = pit.speed / 3.6 * i / 36;
-                    pit.sizeH = Math.pow(1 + (pit.speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(pit.acc) * 100) / Math.pow(pit.speed, 1.58), 2));
+                        pit.acc = Math.abs(Double.valueOf(arr[targetValues]));
+                        pit.lat = Double.valueOf(arr[5]);
+                        pit.lon = Double.valueOf(arr[6]);
+                        pit.speed = MyApplication.round(Double.valueOf(arr[7]), 2);
+                        pit.distance = pit.speed / 3.6 * j / 36;
+                        pit.sizeH = Math.pow(1 + (pit.speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(pit.acc) * 100) / Math.pow(pit.speed, 1.58), 2));
 
-                    if (pit.speed > MIN_ACTUAL_SPEED) {
-                        pits.add(pit);
+                        if (pit.speed > MIN_ACTUAL_SPEED) {
+                            pits.add(pit);
+                        }
+
                     }
-
+                } catch (NumberFormatException e) {
+                    e.printStackTrace();
+                    Log.i("Loger", "Exception parsing");
                 }
             }
 

@@ -7,6 +7,8 @@ import java.util.ArrayList;
  */
 public class Pits extends ArrayList<Pit> {
 
+    public String filename;
+
 public Pits(){
 
         }

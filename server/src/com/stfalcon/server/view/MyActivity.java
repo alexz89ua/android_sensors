@@ -143,6 +143,21 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         rbLFF.performClick();
 
 
+        analytic.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                File fileDir = new File("/sdcard/DCIM/UARoads/");
+                for (File file : fileDir.listFiles()) {
+                    if (!file.isDirectory()) {
+                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, MyActivity.this);
+                        getSpiceManager().execute(analiticBackgroundProcess, onResultTaskListener);
+                    }
+                }
+                return false;
+            }
+        });
+
+
         tvFrequency = (TextView) findViewById(R.id.tv_frequency);
         tvFilterValue = (TextView) findViewById(R.id.filter_value);
 
@@ -187,6 +202,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
     /**
      * Реалізація FULL SCREEN
+     *
      * @param hasFocus
      */
     @Override
@@ -285,8 +301,8 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                                 public void OnSelectedFile(File file) {
                                     if (analytic.isEnabled()) {
                                         Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
-                                        AnalyticBackgroundProcess analiticBackgroundProces = new AnalyticBackgroundProcess(file, MyActivity.this);
-                                        getSpiceManager().execute(analiticBackgroundProces, onResultTaskListener);
+                                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, MyActivity.this);
+                                        getSpiceManager().execute(analiticBackgroundProcess, onResultTaskListener);
                                         analyticProgress.setVisibility(View.VISIBLE);
                                         analytic.setEnabled(false);
                                         analizFileName = file.getName();
@@ -456,7 +472,9 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                     String allData = intent.getStringExtra(MyApplication.SENSOR);
                     String consolText = tvConsole.getText().toString();
-                    if (consolText.length() > 800) { consolText = "";}
+                    if (consolText.length() > 800) {
+                        consolText = "";
+                    }
                     tvConsole.setText(consolText + allData);
 
 
@@ -466,96 +484,95 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     long lastTime = Long.valueOf(arr[0]);
                     sendingTime = currentTime - lastTime;
 
-                        arr = allData.split(" ", 7);
-                        long readDataTime = Long.valueOf(arr[0]);
-                        float x = Float.valueOf(arr[1]);
-                        float y = Float.valueOf(arr[2]);
-                        float z = Float.valueOf(arr[3]);
-                        float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
-                        long graphTime = sendingTime + (28);
+                    arr = allData.split(" ", 7);
+                    long readDataTime = Long.valueOf(arr[0]);
+                    float x = Float.valueOf(arr[1]);
+                    float y = Float.valueOf(arr[2]);
+                    float z = Float.valueOf(arr[3]);
+                    float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
+                    long graphTime = sendingTime + (28);
 
-                        showSpeed(getModel(device), arr[6]);
+                    showSpeed(getModel(device), arr[6]);
 
-                        //TODO:
-                        float lff;
+                    //TODO:
+                    float lff;
 
-                        if (information.lffSeries.getItemCount() != 0) {
-                            float lastLFF = (float) information.lffSeries.getY(information.lffSeries.getItemCount() - 1);
-                            long lastLFFTime = (long) information.lffSeries.getMaxX();
-                            double green = mapHelper.green_pin * frequency / 100;
+                    if (information.lffSeries.getItemCount() != 0) {
+                        float lastLFF = (float) information.lffSeries.getY(information.lffSeries.getItemCount() - 1);
+                        long lastLFFTime = (long) information.lffSeries.getMaxX();
+                        double green = mapHelper.green_pin * frequency / 100;
 
-                            if (graphTime - lastLFFTime > frequency
-                                    && Math.abs(sqr - lastLFF) > green) {
-                                lff = sqr;
-                            } else {
-                                lff = lastLFF;
-                            }
-                        } else {
+                        if (graphTime - lastLFFTime > frequency
+                                && Math.abs(sqr - lastLFF) > green) {
                             lff = sqr;
+                        } else {
+                            lff = lastLFF;
+                        }
+                    } else {
+                        lff = sqr;
+                    }
+
+                    try {
+                        double lat, lon, speed;
+                        lat = Double.valueOf(arr[4]);
+                        lon = Double.valueOf(arr[5]);
+                        speed = Double.valueOf(arr[6]);
+
+                        float pit;
+
+                        switch (radioGroup.getCheckedRadioButtonId()) {
+                            case R.id.rb_x:
+                                pit = x;
+                                break;
+                            case R.id.rb_y:
+                                pit = y;
+                                break;
+                            case R.id.rb_z:
+                                pit = z;
+                                break;
+                            case R.id.rb_lff:
+                                pit = lff;
+                                break;
+                            case R.id.rb_sqrt:
+                            default:
+                                pit = y;
+                                break;
+
                         }
 
-                        try {
-                            double lat, lon, speed;
-                            lat = Double.valueOf(arr[4]);
-                            lon = Double.valueOf(arr[5]);
-                            speed = Double.valueOf(arr[6]);
+                        String pitColor = validatePit(x, y, z);
 
-                            float pit;
+                        if (write && bound) {
 
-                            switch (radioGroup.getCheckedRadioButtonId()) {
-                                case R.id.rb_x:
-                                    pit = x;
-                                    break;
-                                case R.id.rb_y:
-                                    pit = y;
-                                    break;
-                                case R.id.rb_z:
-                                    pit = z;
-                                    break;
-                                case R.id.rb_lff:
-                                    pit = lff;
-                                    break;
-                                case R.id.rb_sqrt:
-                                default:
-                                    pit = y;
-                                    break;
-
-                            }
-
-                            String pitColor = validatePit(x, y, z);
-
-                            if (write && bound) {
-
-                                String time = String.valueOf(System.currentTimeMillis() - readDataTime);
-                                String dataToWrite = currentCounter + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
-                                        "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
-                                writeServise.writeToFile(getModel(device), dataToWrite);
-                                currentCounter++;
-                            }
-
-                            mapHelper.addPoint(lat, lon, pit, speed);
-
-                        } catch (NumberFormatException e) {
-                            e.printStackTrace();
+                            String time = String.valueOf(System.currentTimeMillis() - readDataTime);
+                            String dataToWrite = currentCounter + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
+                                    "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
+                            writeServise.writeToFile(getModel(device), dataToWrite);
+                            currentCounter++;
                         }
 
-                        if (information.xSeries.getMaxX() + 1000 < graphTime) {
+                        mapHelper.addPoint(lat, lon, pit, speed);
 
-                            information.xSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                            information.ySeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                            information.zSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                            information.sqrSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                            information.lffSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                        }
+                    } catch (NumberFormatException e) {
+                        e.printStackTrace();
+                    }
 
-                        information.xSeries.add(graphTime, x);
-                        information.ySeries.add(graphTime, y);
-                        information.zSeries.add(graphTime, z);
-                        information.sqrSeries.add(graphTime, sqr);
+                    if (information.xSeries.getMaxX() + 1000 < graphTime) {
 
-                        //TODO:
-                        information.lffSeries.add(graphTime, lff);
+                        information.xSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                        information.ySeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                        information.zSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                        information.sqrSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                        information.lffSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                    }
 
+                    information.xSeries.add(graphTime, x);
+                    information.ySeries.add(graphTime, y);
+                    information.zSeries.add(graphTime, z);
+                    information.sqrSeries.add(graphTime, sqr);
+
+                    //TODO:
+                    information.lffSeries.add(graphTime, lff);
 
 
                     renderer.setXAxisMin(System.currentTimeMillis() - 10000);
@@ -901,7 +918,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
             int count = result.size();
             ArrayList<Double> pitArray = new ArrayList<Double>();
-            writeServise.createFileToWriteResults(analizFileName);
+            writeServise.createFileToWriteResults(result.filename);
 
             //горуємо дані для запису файлу з результатами
             double s = 0;
@@ -909,8 +926,8 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                 mapHelper.addPoint(result.get(i));
                 pitArray.add(result.get(i).sizeH);
                 s += (i / 36) * (result.get(i).speed / 3.6);
-                String data = s + " " + result.get(i).acc + " " + result.get(i).speed + " " + result.get(i).sizeH + "\n";
-                writeServise.writeToFile(analizFileName, data);
+                String data = i + " " + result.get(i).acc + " " + result.get(i).speed + " " + result.get(i).sizeH + "\n";
+                writeServise.writeToFile(result.filename, data);
             }
 
             double sum = 0;
@@ -922,8 +939,12 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
             double sko_t = Math.sqrt((sd_dat / pitArray.size()));
 
-            writeServise.writeToFile(analizFileName, "\n");
-            writeServise.writeToFile(analizFileName, "max=" + Collections.max(pitArray) + " stDev=" + sko_t + " aVen=" + sum / result.size());
+            writeServise.writeToFile(result.filename, "\n");
+            try {
+                writeServise.writeToFile(result.filename, "max=" + Collections.max(pitArray) + " stDev=" + sko_t + " aVen=" + sum / result.size());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
             writeServise.stopWriteToFile();
             mapFragment.setVisibility(View.VISIBLE);
             showMap.setText("Hide Map");
