@@ -42,7 +42,8 @@ public class TookThePhone {
 
 
     /**
-     * Аналізує данні що надійшли з сенсорів
+     * Перевіряє чи не змінився кут повороту девайсу
+     * за останню секунду більше ніж на SEARCHENG_ANGLE
      *
      * @param sensorEvent
      */
@@ -77,7 +78,7 @@ public class TookThePhone {
 
 
     /**
-     *
+     * Стрює лог файл для запису поворотів дувайсу
      */
     private void createFileToWriteResults() {
 

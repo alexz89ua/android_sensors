@@ -12,9 +12,7 @@ import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.*;
-import android.widget.Button;
-import android.widget.RadioButton;
-import android.widget.Toast;
+import android.widget.*;
 
 public class MyActivity extends Activity implements View.OnClickListener {
 
@@ -80,6 +78,26 @@ public class MyActivity extends Activity implements View.OnClickListener {
                 bound = false;
             }
         };
+
+
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekbar_speed);
+        final TextView tv_speed = (TextView) findViewById(R.id.tv_speed);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                tv_speed.setText(String.valueOf(writeServise.validateSpeed(seekBar.getProgress())));
+            }
+        });
 
     }
 

@@ -205,14 +205,20 @@ public class SensorService extends Service implements SensorEventListener {
      * @param speed перевірену на адекватність
      * @return
      */
-    private synchronized double validateSpeed(double speed) {
+    public synchronized double validateSpeed(double speed) {
         if (speed != 0) {
-            double dV = speed - lastBestSpeed;
-            long dT = System.currentTimeMillis() - lastSpeedTime * 1000;
+            double dV = Math.abs(speed - lastBestSpeed);
+            long dT = (System.currentTimeMillis() - lastSpeedTime) / 1000;
             double a = dV / dT;
-            if (a < MAXIMUM_POSSIBLE_ACCELERATION) {
+            Log.v("Loger", "dV=" + dV);
+            Log.v("Loger", "dT=" + dT);
+            Log.v("Loger", "a=" + a);
+            if (Math.abs(a) < MAXIMUM_POSSIBLE_ACCELERATION) {
                 lastBestSpeed = speed;
+            } else {
+                Log.v("Loger", "false");
             }
+            lastSpeedTime = System.currentTimeMillis();
         }
         return lastBestSpeed * 3.6;
     }
