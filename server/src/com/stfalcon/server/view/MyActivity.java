@@ -62,7 +62,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
     private int filterValuePerSecond = 15, counter = 0; //in seconds
 
-    private CheckBox rbX, rbY, rbZ, rbSqrt, rbH, cbAuto;
+    private CheckBox cbX, cbY, cbZ, cbSqrt, cbH, cbAuto;
     private RadioGroup radioGroup;
     private SeekBar seekBarFrequency, seekBarSensativity;
     private float frequency;
@@ -128,19 +128,19 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
         radioGroup = (RadioGroup) findViewById(R.id.radio_group);
 
-        rbX = (CheckBox) findViewById(R.id.rb_x);
-        rbY = (CheckBox) findViewById(R.id.rb_y);
-        rbZ = (CheckBox) findViewById(R.id.rb_z);
-        rbSqrt = (CheckBox) findViewById(R.id.rb_sqrt);
-        rbH = (CheckBox) findViewById(R.id.rb_lff);
+        cbX = (CheckBox) findViewById(R.id.rb_x);
+        cbY = (CheckBox) findViewById(R.id.rb_y);
+        cbZ = (CheckBox) findViewById(R.id.rb_z);
+        cbSqrt = (CheckBox) findViewById(R.id.rb_sqrt);
+        cbH = (CheckBox) findViewById(R.id.rb_lff);
 
-        rbX.setOnCheckedChangeListener(this);
-        rbY.setOnCheckedChangeListener(this);
-        rbZ.setOnCheckedChangeListener(this);
-        rbSqrt.setOnCheckedChangeListener(this);
-        rbH.setOnCheckedChangeListener(this);
+        cbX.setOnCheckedChangeListener(this);
+        cbY.setOnCheckedChangeListener(this);
+        cbZ.setOnCheckedChangeListener(this);
+        cbSqrt.setOnCheckedChangeListener(this);
+        cbH.setOnCheckedChangeListener(this);
 
-        rbH.performClick();
+        cbH.performClick();
 
 
         analytic.setOnLongClickListener(new View.OnLongClickListener() {
@@ -513,10 +513,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         lff = sqr;
                     }*/
 
-                   // speed = 40;
+                    // speed = 40;
 
                     if (speed > 20) {
-                       //speed = MyApplication.round(speed / 3.6, 2);
+                        //speed = MyApplication.round(speed / 3.6, 2);
                         lff = MyApplication.round(Math.pow(1 + (speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(x) * 100) / Math.pow(speed, 1.58), 2)), 2);
                     }
 
@@ -575,13 +575,21 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         information.HSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                     }
 
-                    information.xSeries.add(graphTime, x);
-                    information.ySeries.add(graphTime, y);
-                    information.zSeries.add(graphTime, z);
-                    information.sqrSeries.add(graphTime, sqr);
-
-                    //TODO:
-                    information.HSeries.add(graphTime, lff);
+                    if (cbX.isChecked()) {
+                        information.xSeries.add(graphTime, x);
+                    }
+                    if (cbY.isChecked()) {
+                        information.ySeries.add(graphTime, y);
+                    }
+                    if (cbZ.isChecked()) {
+                        information.zSeries.add(graphTime, z);
+                    }
+                    if (cbSqrt.isChecked()) {
+                        information.sqrSeries.add(graphTime, sqr);
+                    }
+                    if (cbH.isChecked()) {
+                        information.HSeries.add(graphTime, lff);
+                    }
 
 
                     renderer.setXAxisMin(System.currentTimeMillis() - 10000);
@@ -732,7 +740,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         XYValueSeries sqrSeries = new XYValueSeries(information.device + "-sqr");
 
         information.sqrSeries = sqrSeries;
-        if (rbSqrt.isChecked()) {
+        if (cbSqrt.isChecked()) {
             renderer.addSeriesRenderer(information.sqrSeriesRenderer);
             dataSet.addSeries(devices.size(), sqrSeries);
         }
@@ -751,7 +759,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         XYValueSeries zSeries = new XYValueSeries(information.device + "-Z");
         information.zSeries = zSeries;
 
-        if (rbZ.isChecked()) {
+        if (cbZ.isChecked()) {
             renderer.addSeriesRenderer(information.zSeriesRenderer);
             dataSet.addSeries(devices.size(), zSeries);
         }
@@ -769,7 +777,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
         XYValueSeries ySeries = new XYValueSeries(information.device + "-Y");
         information.ySeries = ySeries;
-        if (rbY.isChecked()) {
+        if (cbY.isChecked()) {
             renderer.addSeriesRenderer(information.ySeriesRenderer);
             dataSet.addSeries(devices.size(), ySeries);
         }
@@ -787,7 +795,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         XYValueSeries xSeries = new XYValueSeries(information.device + "-X");
         information.xSeries = xSeries;
 
-        if (rbX.isChecked()) {
+        if (cbX.isChecked()) {
             renderer.addSeriesRenderer(information.xSeriesRenderer);
             dataSet.addSeries(devices.size(), xSeries);
         }
@@ -805,7 +813,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         XYValueSeries lffSeries = new XYValueSeries(information.device + "-LFF");
         information.HSeries = lffSeries;
 
-        if (rbH.isChecked()) {
+        if (cbH.isChecked()) {
             renderer.addSeriesRenderer(information.lffSeriesRenderer);
             dataSet.addSeries(devices.size(), lffSeries);
         }
