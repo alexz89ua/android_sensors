@@ -154,7 +154,7 @@
         <CheckBox
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="LFF"
+                android:text="H"
                 android:id="@+id/rb_lff"/>
     </RadioGroup>
 

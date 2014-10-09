@@ -28,6 +28,8 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
     private ArrayList<Double> Y_MAX_ELEMENTS_COUNT = new ArrayList<Double>();
     private ArrayList<Double> Z_MAX_ELEMENTS_COUNT = new ArrayList<Double>();
 
+    private OutputStreamWriter outputStream;
+
 
     public AnalyticBackgroundProcess(File data, Context context) {
         super(Pits.class);
@@ -45,6 +47,7 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
 
         try {
 
+            createFileToWriteResults(file);
 
             // зчитуємо вхідні дані з файлу
             in = new FileInputStream(file);
@@ -137,6 +140,8 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
                         pit.distance = pit.speed / 3.6 * j / 36;
                         pit.sizeH = Math.pow(1 + (pit.speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(pit.acc) * 100) / Math.pow(pit.speed, 1.58), 2));
 
+                        writeToFile(String.valueOf(pit.acc) + ",");
+
                         if (pit.speed > MIN_ACTUAL_SPEED) {
                             pits.add(pit);
                         }
@@ -154,8 +159,61 @@ public class AnalyticBackgroundProcess extends SpiceRequest<Pits> {
             Log.i("Loger", "Exception in analytic");
 
         }
-
+        stopWriteToFile();
         return pits;
     }
+
+
+
+    /**
+     *
+     */
+    public void createFileToWriteResults(File file){
+
+        try {
+
+            File directory = new File("/sdcard/DCIM/UARoads/Filter/");
+            directory.mkdirs();
+
+            File myFile = new File("/sdcard/DCIM/UARoads/Filter/" + file.getName() + "_FILTER_DATA" +  ".txt");
+            myFile.createNewFile();
+            FileOutputStream fOut = new FileOutputStream(myFile);
+
+            outputStream = new OutputStreamWriter(fOut);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    /**
+     *
+     * @param data
+     */
+    public void writeToFile(String data){
+        try {
+            outputStream.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception i){
+            i.printStackTrace();
+        }
+    }
+
+
+    /**
+     *
+     */
+    public void stopWriteToFile(){
+            try {
+                outputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+    }
+
+
 
 }

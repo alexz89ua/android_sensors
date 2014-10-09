@@ -222,11 +222,6 @@ public class SensorService extends Service implements SensorEventListener {
         }
         return lastBestSpeed * 3.6;
     }
-
-
-    /**
-     * Викликається при надходженні нових даних сенсора. Ініціалізує передачу даних до сервера
-     */
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 

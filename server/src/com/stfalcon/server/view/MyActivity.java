@@ -62,7 +62,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
     private int filterValuePerSecond = 15, counter = 0; //in seconds
 
-    private CheckBox rbX, rbY, rbZ, rbSqrt, rbLFF, cbAuto;
+    private CheckBox rbX, rbY, rbZ, rbSqrt, rbH, cbAuto;
     private RadioGroup radioGroup;
     private SeekBar seekBarFrequency, seekBarSensativity;
     private float frequency;
@@ -132,15 +132,15 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         rbY = (CheckBox) findViewById(R.id.rb_y);
         rbZ = (CheckBox) findViewById(R.id.rb_z);
         rbSqrt = (CheckBox) findViewById(R.id.rb_sqrt);
-        rbLFF = (CheckBox) findViewById(R.id.rb_lff);
+        rbH = (CheckBox) findViewById(R.id.rb_lff);
 
         rbX.setOnCheckedChangeListener(this);
         rbY.setOnCheckedChangeListener(this);
         rbZ.setOnCheckedChangeListener(this);
         rbSqrt.setOnCheckedChangeListener(this);
-        rbLFF.setOnCheckedChangeListener(this);
+        rbH.setOnCheckedChangeListener(this);
 
-        rbLFF.performClick();
+        rbH.performClick();
 
 
         analytic.setOnLongClickListener(new View.OnLongClickListener() {
@@ -489,17 +489,18 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     float x = Float.valueOf(arr[1]);
                     float y = Float.valueOf(arr[2]);
                     float z = Float.valueOf(arr[3]);
+                    float speed = Float.valueOf(arr[6]);
                     float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
                     long graphTime = sendingTime + (28);
 
                     showSpeed(getModel(device), arr[6]);
 
                     //TODO:
-                    float lff;
+                    float lff = 0;
 
-                    if (information.lffSeries.getItemCount() != 0) {
-                        float lastLFF = (float) information.lffSeries.getY(information.lffSeries.getItemCount() - 1);
-                        long lastLFFTime = (long) information.lffSeries.getMaxX();
+                 /*   if (information.HSeries.getItemCount() != 0) {
+                        float lastLFF = (float) information.HSeries.getY(information.HSeries.getItemCount() - 1);
+                        long lastLFFTime = (long) information.HSeries.getMaxX();
                         double green = mapHelper.green_pin * frequency / 100;
 
                         if (graphTime - lastLFFTime > frequency
@@ -510,13 +511,20 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         }
                     } else {
                         lff = sqr;
+                    }*/
+
+                   // speed = 40;
+
+                    if (speed > 20) {
+                       //speed = MyApplication.round(speed / 3.6, 2);
+                        lff = MyApplication.round(Math.pow(1 + (speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(x) * 100) / Math.pow(speed, 1.58), 2)), 2);
                     }
 
+
                     try {
-                        double lat, lon, speed;
+                        double lat, lon;
                         lat = Double.valueOf(arr[4]);
                         lon = Double.valueOf(arr[5]);
-                        speed = Double.valueOf(arr[6]);
 
                         float pit;
 
@@ -540,7 +548,8 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                         }
 
-                        String pitColor = validatePit(x, y, z);
+
+                        String pitColor = validatePit(lff);
 
                         if (write && bound) {
 
@@ -563,7 +572,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         information.ySeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.zSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.sqrSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                        information.lffSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
+                        information.HSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                     }
 
                     information.xSeries.add(graphTime, x);
@@ -572,7 +581,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     information.sqrSeries.add(graphTime, sqr);
 
                     //TODO:
-                    information.lffSeries.add(graphTime, lff);
+                    information.HSeries.add(graphTime, lff);
 
 
                     renderer.setXAxisMin(System.currentTimeMillis() - 10000);
@@ -613,40 +622,40 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     }
 
 
-    private String validatePit(double x, double y, double z) {
+    private String validatePit(float value) {
 
-        values.add(Math.abs(x));
+        /*values.add(Math.abs(x));
         values.add(Math.abs(y));
         values.add(Math.abs(z));
 
         double max = Collections.max(values);
 
-        values.clear();
+        values.clear();*/
 
 
-        if (counter > 0 && max <= mapHelper.yellow_pin) {
+        if (counter > 0 && value <= mapHelper.yellow_pin) {
             counter--;
             return "g";
         }
 
-        if (max < mapHelper.green_pin) {
+        if (value < mapHelper.green_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_green);
             counter = 1;
             return "g";
         }
 
-        if (max >= mapHelper.green_pin && max <= mapHelper.yellow_pin) {
+        if (value >= mapHelper.green_pin && value <= mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_yellow);
             counter = 40;
-            soundManager.genTone(max);
+            soundManager.genTone(value);
             soundManager.playSound();
             return "y";
         }
 
-        if (max > mapHelper.yellow_pin) {
+        if (value > mapHelper.yellow_pin) {
             rlSpeed.setBackgroundResource(R.drawable.circle_red);
             counter = 40;
-            soundManager.genTone(max);
+            soundManager.genTone(value);
             soundManager.playSound();
             return "r";
         }
@@ -794,9 +803,9 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         information.lffSeriesRenderer = r;
 
         XYValueSeries lffSeries = new XYValueSeries(information.device + "-LFF");
-        information.lffSeries = lffSeries;
+        information.HSeries = lffSeries;
 
-        if (rbX.isChecked()) {
+        if (rbH.isChecked()) {
             renderer.addSeriesRenderer(information.lffSeriesRenderer);
             dataSet.addSeries(devices.size(), lffSeries);
         }
@@ -839,7 +848,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                         tvFrequency.setVisibility(View.GONE);
                     }
 
-                    series = information.lffSeries;
+                    series = information.HSeries;
                     seriesRenderer = information.lffSeriesRenderer;
                     break;
 
@@ -849,7 +858,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     break;
 
                 default:
-                    series = information.lffSeries;
+                    series = information.HSeries;
                     seriesRenderer = information.lffSeriesRenderer;
                     break;
             }
@@ -873,7 +882,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         private XYValueSeries ySeries;
         private XYValueSeries zSeries;
         private XYValueSeries sqrSeries;
-        private XYValueSeries lffSeries;
+        private XYValueSeries HSeries;
 
         private org.achartengine.renderer.XYSeriesRenderer xSeriesRenderer;
         private org.achartengine.renderer.XYSeriesRenderer ySeriesRenderer;
