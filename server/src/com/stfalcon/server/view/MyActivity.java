@@ -555,7 +555,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                             String time = String.valueOf(System.currentTimeMillis() - readDataTime);
                             String dataToWrite = currentCounter + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
-                                    "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor + "\n";
+                                    "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor +  "\t\t\t" + time + "\n";
                             writeServise.writeToFile(getModel(device), dataToWrite);
                             currentCounter++;
                         }
