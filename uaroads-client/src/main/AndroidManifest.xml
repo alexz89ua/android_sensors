@@ -17,7 +17,7 @@
             android:icon="@drawable/ic_launcher"
             android:name=".MyApplication">
         <activity
-                android:name="MyActivity"
+                android:name=".view.ClientActivity"
                 android:label="@string/app_name"
                 android:screenOrientation="portrait">
             <intent-filter>

@@ -1,4 +1,4 @@
-package com.stfalcon.server;
+package com.stfalcon.server.util;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;

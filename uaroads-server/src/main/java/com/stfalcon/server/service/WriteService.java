@@ -42,6 +42,9 @@ public class WriteService extends Service {
                     @Override
                     public void onCreated() {
                         createdConnectionWrapper = true;
+                        Intent intentTracking = new Intent(MyApplication.MESSAGE);
+                        intentTracking.putExtra(MyApplication.CREATED, true);
+                        LocalBroadcastManager.getInstance(WriteService.this).sendBroadcast(intentTracking);
                     }
                 }
         );

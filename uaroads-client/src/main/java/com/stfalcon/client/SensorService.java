@@ -22,7 +22,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
+import com.google.gson.Gson;
 import com.stfalcon.client.connection.*;
+import com.stfalcon.client.data.AccelData;
+import com.stfalcon.client.util.SensorHelper;
+import com.stfalcon.client.view.ClientActivity;
 
 import org.json.JSONObject;
 
@@ -49,19 +53,19 @@ public class SensorService extends Service implements SensorEventListener {
     private long lastSpeedTime = 0;
     private long startListeningTime = 0;
     private boolean createdConnectionWrapper = false;
+    private SensorHelper sensorHelper;
 
     private List<String> dataToSend = new ArrayList<String>();
     private long lastSendingTime = 0l;
     private long lastGettingTime = 0l;
     private int counter;
-
-
-    //private TookThePhone tookThePhone;
+    private Gson gson = new Gson();
 
 
     @Override
     public void onCreate() {
         super.onCreate();
+        sensorHelper = new SensorHelper();
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         //    tookThePhone = new TookThePhone();
@@ -106,8 +110,7 @@ public class SensorService extends Service implements SensorEventListener {
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, listener);
         }
 
-    //  tookThePhone.registrateListener(this, sensorManager);
-        SensorHelper.registrateListener(this, sensorManager, activeSensorType);
+        sensorHelper.registrateListener(this, sensorManager, activeSensorType);
 
         startListeningTime = System.currentTimeMillis();
     }
@@ -134,28 +137,25 @@ public class SensorService extends Service implements SensorEventListener {
     /**
      * Додає до данних координати і айді девайсу. Після чого формує пакети і періодично передає на сервер
      */
-    public void sendNewData(Object[] resultData) {
-
-        final long time = (Long) resultData[0];
-        String data = (String) resultData[1];
-        final int type = (Integer) resultData[2];
+    public void sendNewData(final AccelData resultData) {
+        if (resultData == null) return;
 
         if (createdConnectionWrapper) {
-            if (type == activeSensorType && data != null) {
-                String loc = " " + previousBestLocation.getLatitude() + " " + previousBestLocation.getLongitude();
-                data = data + loc + " " + String.valueOf(validateSpeed(0)) + "\n";
-
-                final String stringDataToSend = data;
+            if (resultData.sensorType == activeSensorType) {
+                resultData.lat = previousBestLocation.getLatitude();
+                resultData.lon = previousBestLocation.getLongitude();
+                resultData.speed = previousBestLocation.getSpeed();
+                resultData.device = createDeviceDescription(resultData.sensorType);
 
                 getConnectionWrapper().send(
                         new HashMap<String, String>() {{
                             put(Communication.MESSAGE_TYPE, Communication.Connect.DATA);
-                            put(Communication.Connect.DEVICE, createDeviceDescription(type));
-                            put(MyApplication.SENSOR, stringDataToSend);
+                            put(Communication.Connect.DEVICE, resultData.device);
+                            put(MyApplication.SENSOR, gson.toJson(resultData));
                         }}
                 );
 
-                lastSendingTime = time;
+                lastSendingTime = resultData.time;
             }
         }
     }
@@ -187,7 +187,7 @@ public class SensorService extends Service implements SensorEventListener {
      */
     public Notification makeNotification() {
 
-        Intent intent = new Intent(this, MyActivity.class);
+        Intent intent = new Intent(this, ClientActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP |
                 Intent.FLAG_ACTIVITY_SINGLE_TOP |
                 Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -254,10 +254,8 @@ public class SensorService extends Service implements SensorEventListener {
             counter = 0;
         }
 
-        if (sensorEvent.sensor.getType() != Sensor.TYPE_ORIENTATION) {
-            sendNewData(SensorHelper.analyzeSensorEvent(sensorEvent, time));
-        } else {
-   ///         tookThePhone.analyzeSensorEvent(sensorEvent);
+        if (sensorEvent.sensor.getType() != Sensor.TYPE_ROTATION_VECTOR) {
+            sendNewData(sensorHelper.analyzeSensorEvent(sensorEvent, time));
         }
 
     }

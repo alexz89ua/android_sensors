@@ -3,9 +3,9 @@ package com.stfalcon.server;
 import android.content.Context;
 import android.util.Log;
 import com.octo.android.robospice.request.SpiceRequest;
-import com.stfalcon.server.entity.DataLines;
-import com.stfalcon.server.entity.Pit;
-import com.stfalcon.server.entity.Pits;
+import com.stfalcon.server.data.DataLines;
+import com.stfalcon.server.data.Pit;
+import com.stfalcon.server.data.Pits;
 
 import java.io.*;
 import java.util.ArrayList;

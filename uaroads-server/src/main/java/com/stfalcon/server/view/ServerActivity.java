@@ -11,11 +11,16 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
+
+import com.google.gson.Gson;
 import com.octo.android.robospice.persistence.exception.SpiceException;
 import com.octo.android.robospice.request.listener.RequestListener;
 import com.stfalcon.server.*;
-import com.stfalcon.server.entity.Pits;
+import com.stfalcon.server.data.AccelData;
+import com.stfalcon.server.data.Pits;
 import com.stfalcon.server.service.WriteService;
+import com.stfalcon.server.util.SoundManager;
+
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
 import org.achartengine.chart.PointStyle;
@@ -34,7 +39,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
-public class MyActivity extends BaseSpiceActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
+public class ServerActivity extends BaseSpiceActivity implements View.OnClickListener, CompoundButton.OnCheckedChangeListener {
     private final static int MIN_VALUES_COUNT_PER_SECOND = 5;
     private final static int MAX_VALUES_COUNT_PER_SECOND = 30;
     private final static int MILLISECONDS_BEFORE_REFRESH_GRAPHS = 30;
@@ -71,12 +76,14 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     private XYMultipleSeriesDataset dataSet = new XYMultipleSeriesDataset();
     private XYMultipleSeriesRenderer renderer = new XYMultipleSeriesRenderer();
     private OnResultTaskListener onResultTaskListener = new OnResultTaskListener();
+    private Gson gson = new Gson();
 
     private ArrayList<Double> values = new ArrayList<Double>();
     private String analizFileName;
 
 
     private long currentCounter = 0;
+    private ImageView conState;
 
 
     /**
@@ -93,6 +100,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
         soundManager = new SoundManager();
 
+        conState = (ImageView) findViewById(R.id.connect_state);
         server = (Button) findViewById(R.id.server);
         analytic = (Button) findViewById(R.id.analytic);
         showConsole = (Button) findViewById(R.id.show_console);
@@ -125,7 +133,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
         cbY = (CheckBox) findViewById(R.id.rb_y);
         cbZ = (CheckBox) findViewById(R.id.rb_z);
         cbSqrt = (CheckBox) findViewById(R.id.rb_sqrt);
-        cbH = (CheckBox) findViewById(R.id.rb_lff);
+        cbH = (CheckBox) findViewById(R.id.rb_rotation);
 
         cbX.setOnCheckedChangeListener(this);
         cbY.setOnCheckedChangeListener(this);
@@ -142,7 +150,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                 File fileDir = new File("/sdcard/DCIM/UARoads/");
                 for (File file : fileDir.listFiles()) {
                     if (!file.isDirectory()) {
-                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, MyActivity.this);
+                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, ServerActivity.this);
                         getSpiceManager().execute(analiticBackgroundProcess, onResultTaskListener);
                     }
                 }
@@ -292,7 +300,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                                 public void OnSelectedFile(File file) {
                                     if (analytic.isEnabled()) {
                                         Toast.makeText(getApplicationContext(), file.getName(), Toast.LENGTH_LONG).show();
-                                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, MyActivity.this);
+                                        AnalyticBackgroundProcess analiticBackgroundProcess = new AnalyticBackgroundProcess(file, ServerActivity.this);
                                         getSpiceManager().execute(analiticBackgroundProcess, onResultTaskListener);
                                         analyticProgress.setVisibility(View.VISIBLE);
                                         analytic.setEnabled(false);
@@ -443,80 +451,43 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     }
 
 
-                    String allData = intent.getStringExtra(MyApplication.SENSOR);
+                    String data = intent.getStringExtra(MyApplication.SENSOR);
+
+                    AccelData accelData = gson.fromJson(data, AccelData.class);
+
                     String consolText = tvConsole.getText().toString();
                     if (consolText.length() > 800) {
                         consolText = "";
                     }
-                    tvConsole.setText(consolText + allData);
+                    tvConsole.setText(consolText + data);
 
 
-                    long sendingTime;
+                    //long sendingTime;
+                    //sendingTime = currentTime - accelData.time;
+                    //long graphTime = sendingTime + (28);
 
-                    String[] arr = allData.split(" ", 7);
-                    long lastTime = Long.valueOf(arr[0]);
-                    sendingTime = currentTime - lastTime;
+                    showSpeed(getModel(device), accelData.speed);
 
-                    arr = allData.split(" ", 7);
-                    long readDataTime = Long.valueOf(arr[0]);
-                    float x = Float.valueOf(arr[1]);
-                    float y = Float.valueOf(arr[2]);
-                    float z = Float.valueOf(arr[3]);
-                    float speed = Float.valueOf(arr[6]);
-                    float sqr = MyApplication.round((float) Math.sqrt(x * x + y * y + z * z), 2);
-                    long graphTime = sendingTime + (28);
-
-                    showSpeed(getModel(device), arr[6]);
-
-                    //TODO:
-                    float lff = 0;
-
-                 /*   if (information.HSeries.getItemCount() != 0) {
-                        float lastLFF = (float) information.HSeries.getY(information.HSeries.getItemCount() - 1);
-                        long lastLFFTime = (long) information.HSeries.getMaxX();
-                        double green = mapHelper.green_pin * frequency / 100;
-
-                        if (graphTime - lastLFFTime > frequency
-                                && Math.abs(sqr - lastLFF) > green) {
-                            lff = sqr;
-                        } else {
-                            lff = lastLFF;
-                        }
-                    } else {
-                        lff = sqr;
-                    }*/
-
-                    // speed = 40;
-
-                    if (speed > 20) {
-                        //speed = MyApplication.round(speed / 3.6, 2);
-                        lff = MyApplication.round(Math.pow(1 + (speed - 30) * 0.01, 3.1) * (MyApplication.round((Math.abs(x) * 100) / Math.pow(speed, 1.58), 2)), 2);
-                    }
-
-
-                    try {
-                        double lat, lon;
-                        lat = Double.valueOf(arr[4]);
-                        lon = Double.valueOf(arr[5]);
 
                         float pit;
 
                         switch (radioGroup.getCheckedRadioButtonId()) {
                             case R.id.rb_x:
-                                pit = x;
+                                pit = accelData.x;
                                 break;
                             case R.id.rb_y:
-                                pit = y;
+                                pit = accelData.y;
                                 break;
                             case R.id.rb_z:
-                                pit = z;
+                                pit = accelData.z;
                                 break;
-                            case R.id.rb_lff:
-                                pit = lff;
+                            case R.id.rb_rotation:
+                                pit = accelData.verticalAcc;
                                 break;
                             case R.id.rb_sqrt:
+                                pit = accelData.sqrt;
                             default:
-                                pit = y;
+                                pit = 0;
                                 break;
 
                         }
@@ -526,40 +497,35 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
                         if (write && bound) {
 
-                            String time = String.valueOf(System.currentTimeMillis() - readDataTime);
-                            String dataToWrite = currentCounter + "\t\t\t" + x + "\t\t\t" + y + "\t\t\t" + z + "\t\t\t" + sqr +
-                                    "\t\t\t" + lat + "\t\t\t" + lon + "\t\t\t" + speed + "\t\t\t" + pitColor +  "\t\t\t" + time + "\n";
+                            String time = String.valueOf(System.currentTimeMillis());
+                            String dataToWrite = currentCounter + "\t\t\t" + accelData.x + "\t\t\t" + accelData.y + "\t\t\t" + accelData.z + "\t\t\t" + accelData.sqrt +
+                                    "\t\t\t" + accelData.lat + "\t\t\t" + accelData.lon + "\t\t\t" + speed + "\t\t\t" + pitColor +  "\t\t\t" + time + "\n";
                             writeServise.writeToFile(getModel(device), dataToWrite);
                             currentCounter++;
                         }
 
-                    } catch (NumberFormatException e) {
-                        e.printStackTrace();
-                    }
-
-                    if (information.xSeries.getMaxX() + 1000 < graphTime) {
-
+                  /* // if (information.xSeries.getMaxX() + 1000 < graphTime) {
                         information.xSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.ySeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.zSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.sqrSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
                         information.HSeries.add(currentTime - 500, MathHelper.NULL_VALUE);
-                    }
+                  //  }*/
 
                     if (cbX.isChecked()) {
-                        information.xSeries.add(graphTime, x);
+                        information.xSeries.add(accelData.time, accelData.x);
                     }
                     if (cbY.isChecked()) {
-                        information.ySeries.add(graphTime, y);
+                        information.ySeries.add(accelData.time, accelData.y);
                     }
                     if (cbZ.isChecked()) {
-                        information.zSeries.add(graphTime, z);
+                        information.zSeries.add(accelData.time, accelData.z);
                     }
                     if (cbSqrt.isChecked()) {
-                        information.sqrSeries.add(graphTime, sqr);
+                        information.sqrSeries.add(accelData.time, accelData.sqrt);
                     }
                     if (cbH.isChecked()) {
-                        information.HSeries.add(graphTime, lff);
+                        information.HSeries.add(accelData.time, accelData.verticalAcc);
                     }
 
 
@@ -572,14 +538,18 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
 
 
                 if (intent.hasExtra(MyApplication.STARTED)) {
-                    textView.setText("Start listening... \n");
-                    //startActivity(new Intent(MyActivity.this, GraphicActivity.class));
+                    textView.setText("Start server...");
+                    return;
+                }
+                if (intent.hasExtra(MyApplication.CREATED)) {
+                    conState.setImageResource(android.R.drawable.star_big_on);
+                    textView.setText("Server created");
                     return;
                 }
 
                 if (intent.hasExtra(MyApplication.DEVICE)) {
 
-                    Toast.makeText(MyActivity.this,
+                    Toast.makeText(ServerActivity.this,
                             intent.getStringExtra(MyApplication.DEVICE),
                             Toast.LENGTH_LONG).show();
                 }
@@ -589,13 +559,10 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
     }
 
 
-    private void showSpeed(String device, String speed) {
+    private void showSpeed(String device, double speed) {
         if (device.equals(devicesList.get(0))) {
-            tvSpeed.setText(speed.substring(0, speed.indexOf(".") + 2));
-            this.speed = Float.valueOf(speed);
-            if (cbAuto.isChecked() && this.speed > MIN_DELTA_SPEED) {
-                //Log.i("Loger", "PROGRESS = " + seekBarSensativity.getProgress());
-            }
+            tvSpeed.setText(String.valueOf(speed / 3.6));
+            this.speed = (float) speed;
         }
     }
 
@@ -776,7 +743,7 @@ public class MyActivity extends BaseSpiceActivity implements View.OnClickListene
                     series = information.zSeries;
                     seriesRenderer = information.zSeriesRenderer;
                     break;
-                case R.id.rb_lff:
+                case R.id.rb_rotation:
                     if (isChecked) {
                         seekBarFrequency.setVisibility(View.VISIBLE);
                         tvFrequency.setVisibility(View.VISIBLE);

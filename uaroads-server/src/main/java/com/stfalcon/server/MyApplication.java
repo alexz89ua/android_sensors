@@ -15,6 +15,7 @@ public class MyApplication extends Application {
     public static final String DEVICE = "device";
     public static final String WIFI = "wifi";
     public static final String STARTED = "started";
+    public static final String CREATED = "created";
     public static final String SENSOR = "sensor";
     private ConnectionWrapper mConnectionWrapper;
     private static MyApplication self;

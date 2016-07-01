@@ -1,4 +1,4 @@
-package com.stfalcon.server.entity;
+package com.stfalcon.server.data;
 
 /**
  * Created by alexandr on 19.09.14.

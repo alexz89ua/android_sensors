@@ -1,4 +1,4 @@
-package com.stfalcon.client;
+package com.stfalcon.client.util;
 
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -7,20 +7,30 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
 
+import com.stfalcon.client.data.AccelData;
+
 /**
  * Created by alexandr on 03.09.14.
  */
 public class SensorHelper {
 
     public static final int SENSOR_DELAY_36Hz = 27777; // in  microseconds
+    public static final int ROTATION_SENSOR_DELAY = 1000; // in  microseconds
 
     public static final int TYPE_A = 0;   // ACCELEROMETER
     public static final int TYPE_L = 1;   // LINEAR_ACCELERATION
     public static final int TYPE_G = 2;   // GRAVITY
+    public static final int TYPE_R = 3;   // ROTATION
 
     private static float[] motion = new float[3];
     private static float[] gravity = new float[3];
+    private float gX, gY, gZ;
+    private VerticalAccUtil verticalAccUtil;
 
+
+    public SensorHelper() {
+        verticalAccUtil = new VerticalAccUtil();
+    }
 
     private void getSensorDelay(SensorManager sensorManager) {
         Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -47,7 +57,8 @@ public class SensorHelper {
      * @param sensorManager
      * @param sensorType
      */
-    public static void registrateListener(SensorEventListener listener, SensorManager sensorManager, int sensorType) {
+    public void registrateListener(SensorEventListener listener, SensorManager sensorManager, int sensorType) {
+        sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), ROTATION_SENSOR_DELAY);
         switch (sensorType) {
             case TYPE_L:
                 sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY_36Hz);
@@ -73,66 +84,33 @@ public class SensorHelper {
      * String result[1] - оброблені дані сенсора,
      * int    result[2] - тип сенсора
      */
-    public static Object[] analyzeSensorEvent(SensorEvent sensorEvent, long time) {
+    public AccelData analyzeSensorEvent(SensorEvent sensorEvent, long time) {
 
-        Object[] result = new Object[3];
+        gX = sensorEvent.values[0] / SensorManager.GRAVITY_EARTH;
+        gY = sensorEvent.values[1] / SensorManager.GRAVITY_EARTH;
+        gZ = sensorEvent.values[2] / SensorManager.GRAVITY_EARTH;
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        // gForce will be close to 1 when there is no movement.
+        float sqrt = Math.abs((float)(Math.sqrt(gX * gX + gY * gY + gZ * gZ) - 1));
+        float verticalAcc = verticalAccUtil.onSensorChanged(sensorEvent) / SensorManager.GRAVITY_EARTH;
 
-
-            float x = MyApplication.round(sensorEvent.values[0], 2);
-            float y = MyApplication.round(sensorEvent.values[1], 2);
-            float z = MyApplication.round(sensorEvent.values[2], 2);
-
-            String dataA = time + " " + x + " " + y + " " + z;
-            //Log.i("Loger", dataA);
-
-            result[0] = System.currentTimeMillis();
-            result[1] = dataA;
-            result[2] = SensorHelper.TYPE_A;
-
-            return result;
-
-
+        int sensorType = 0;
+        switch (sensorEvent.sensor.getType()){
+            case Sensor.TYPE_ACCELEROMETER:
+                sensorType = TYPE_A;
+                break;
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                sensorType = TYPE_L;
+                break;
+            case Sensor.TYPE_GRAVITY:
+                sensorType = TYPE_G;
+                break;
+            default:
+                return null;
         }
 
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
-
-            float x = MyApplication.round(sensorEvent.values[0], 2);
-            float y = MyApplication.round(sensorEvent.values[1], 2);
-            float z = MyApplication.round(sensorEvent.values[2], 2);
-
-            String dataL = time + " " + x + " " + y + " " + z;
-
-            result[0] = System.currentTimeMillis();
-            result[1] = dataL;
-            result[2] = SensorHelper.TYPE_L;
-
-            return result;
-
-        }
-
-
-        if (sensorEvent.sensor.getType() == Sensor.TYPE_GRAVITY) {
-
-            for (int i = 0; i < 3; i++) {
-                gravity[i] = (float) (0.1 * sensorEvent.values[i] + 0.9 * gravity[i]);
-                motion[i] = sensorEvent.values[i] - gravity[i];
-            }
-
-            float x = MyApplication.round(motion[0], 2);
-            float y = MyApplication.round(motion[1], 2);
-            float z = MyApplication.round(motion[2], 2);
-
-            String dataG = time + " " + x + " " + y + " " + z;
-
-            result[0] = System.currentTimeMillis();
-            result[1] = dataG;
-            result[2] = SensorHelper.TYPE_G;
-
-            return result;
-        }
-        return null;
+        return new AccelData(null,sensorType, gX, gY, gZ, sqrt, verticalAcc,
+                System.currentTimeMillis(), 0, 0, 0);
     }
 
 

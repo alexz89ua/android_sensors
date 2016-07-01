@@ -1,4 +1,4 @@
-package com.stfalcon.server.entity;
+package com.stfalcon.server.data;
 
 import java.util.ArrayList;
 

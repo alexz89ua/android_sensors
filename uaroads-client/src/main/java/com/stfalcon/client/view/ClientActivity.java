@@ -1,4 +1,4 @@
-package com.stfalcon.client;
+package com.stfalcon.client.view;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -14,7 +14,12 @@ import android.util.Log;
 import android.view.*;
 import android.widget.*;
 
-public class MyActivity extends Activity implements View.OnClickListener {
+import com.stfalcon.client.MyApplication;
+import com.stfalcon.client.R;
+import com.stfalcon.client.util.SensorHelper;
+import com.stfalcon.client.SensorService;
+
+public class ClientActivity extends Activity implements View.OnClickListener {
 
     private Button start, stop, client;
     private RadioButton accel, lAccel, gravity;
@@ -23,6 +28,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
     private boolean bound = false;
     private Intent intentService;
     private BroadcastReceiver mReceiver;
+    private ImageView conState;
 
 
     /**
@@ -32,9 +38,10 @@ public class MyActivity extends Activity implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        conState = (ImageView) findViewById(R.id.connect_state);
         start = (Button) findViewById(R.id.start);
         stop = (Button) findViewById(R.id.stop);
-        client = (Button) findViewById(R.id.client);
+        client = (Button) findViewById(R.id.connect);
         accel = (RadioButton) findViewById(R.id.type_a);
         lAccel = (RadioButton) findViewById(R.id.type_la);
         gravity = (RadioButton) findViewById(R.id.type_g);
@@ -157,7 +164,7 @@ public class MyActivity extends Activity implements View.OnClickListener {
                     writeServise.stopListening();
                     break;
 
-                case R.id.client:
+                case R.id.connect:
                     writeServise.connect();
                     break;
 
@@ -194,7 +201,8 @@ public class MyActivity extends Activity implements View.OnClickListener {
                 }
 
                 if (intent.hasExtra(MyApplication.DEVICE)) {
-                    Toast.makeText(MyActivity.this,
+                    conState.setImageResource(android.R.drawable.star_big_on);
+                    Toast.makeText(ClientActivity.this,
                             getString(R.string.connected),
                             Toast.LENGTH_LONG).show();
                 }
