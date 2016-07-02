@@ -65,7 +65,7 @@ public class SensorService extends Service implements SensorEventListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        sensorHelper = new SensorHelper();
+        sensorHelper = new SensorHelper(this);
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
         //    tookThePhone = new TookThePhone();
@@ -124,7 +124,7 @@ public class SensorService extends Service implements SensorEventListener {
 
         sensorManager.unregisterListener(this);
 
-    //    tookThePhone.stopWriteToFile();
+        //    tookThePhone.stopWriteToFile();
 
         stopForeground(true);
 
@@ -166,13 +166,13 @@ public class SensorService extends Service implements SensorEventListener {
     private String createDeviceDescription(int type) {
         String stringType = "";
         switch (type) {
-            case SensorHelper.TYPE_A:
+            case Sensor.TYPE_ACCELEROMETER:
                 stringType = "Accel";
                 break;
-            case SensorHelper.TYPE_G:
+            case Sensor.TYPE_GRAVITY:
                 stringType = "Gravity";
                 break;
-            case SensorHelper.TYPE_L:
+            case Sensor.TYPE_LINEAR_ACCELERATION:
                 stringType = "Linear-Accel";
                 break;
         }
@@ -235,6 +235,7 @@ public class SensorService extends Service implements SensorEventListener {
         }
         return lastBestSpeed * 3.6;
     }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent) {
 
@@ -254,7 +255,8 @@ public class SensorService extends Service implements SensorEventListener {
             counter = 0;
         }
 
-        if (sensorEvent.sensor.getType() != Sensor.TYPE_ROTATION_VECTOR) {
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR ||
+                sensorEvent.sensor.getType() == activeSensorType) {
             sendNewData(sensorHelper.analyzeSensorEvent(sensorEvent, time));
         }
 

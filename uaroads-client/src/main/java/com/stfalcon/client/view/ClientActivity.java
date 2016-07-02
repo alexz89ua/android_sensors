@@ -2,7 +2,13 @@ package com.stfalcon.client.view;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.*;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
@@ -11,12 +17,20 @@ import android.os.IBinder;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.*;
-import android.widget.*;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.RadioButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.stfalcon.client.MyApplication;
 import com.stfalcon.client.R;
-import com.stfalcon.client.util.SensorHelper;
 import com.stfalcon.client.SensorService;
 
 public class ClientActivity extends Activity implements View.OnClickListener {
@@ -57,13 +71,13 @@ public class ClientActivity extends Activity implements View.OnClickListener {
 
 
         switch (MyApplication.getInstance().getSendedType()) {
-            case SensorHelper.TYPE_A:
+            case Sensor.TYPE_ACCELEROMETER:
                 accel.setChecked(true);
                 break;
-            case SensorHelper.TYPE_L:
+            case Sensor.TYPE_LINEAR_ACCELERATION:
                 lAccel.setChecked(true);
                 break;
-            case SensorHelper.TYPE_G:
+            case Sensor.TYPE_GRAVITY:
                 gravity.setChecked(true);
                 break;
         }
@@ -169,15 +183,15 @@ public class ClientActivity extends Activity implements View.OnClickListener {
                     break;
 
                 case R.id.type_a:
-                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_A);
+                    MyApplication.getInstance().setSendetType(Sensor.TYPE_ACCELEROMETER);
                     break;
 
                 case R.id.type_la:
-                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_L);
+                    MyApplication.getInstance().setSendetType(Sensor.TYPE_LINEAR_ACCELERATION);
                     break;
 
                 case R.id.type_g:
-                    MyApplication.getInstance().setSendetType(SensorHelper.TYPE_G);
+                    MyApplication.getInstance().setSendetType(Sensor.TYPE_GRAVITY);
                     break;
 
             }

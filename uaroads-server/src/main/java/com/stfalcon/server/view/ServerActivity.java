@@ -633,7 +633,7 @@ public class ServerActivity extends BaseSpiceActivity implements View.OnClickLis
         information.sqrSeriesRenderer = r;
 
 
-        XYValueSeries sqrSeries = new XYValueSeries(information.device + "-sqr");
+        XYValueSeries sqrSeries = new XYValueSeries(information.device + "-Sqr");
 
         information.sqrSeries = sqrSeries;
         if (cbSqrt.isChecked()) {
@@ -706,7 +706,7 @@ public class ServerActivity extends BaseSpiceActivity implements View.OnClickLis
 
         information.lffSeriesRenderer = r;
 
-        XYValueSeries lffSeries = new XYValueSeries(information.device + "-LFF");
+        XYValueSeries lffSeries = new XYValueSeries(information.device + "-VerticalAcc");
         information.HSeries = lffSeries;
 
         if (cbH.isChecked()) {

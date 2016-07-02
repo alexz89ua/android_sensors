@@ -31,8 +31,8 @@ public class VerticalAccUtil {
         SensorManager.getRotationMatrixFromVector(rotationMatrix, rotationVector);
 
         float[] accelerationInWorldFrame = matrixMult3x9(
-                accelerometerValues, rotationMatrix
-                //rotationMatrixTranspose(rotationMatrix)
+                accelerometerValues,
+                rotationMatrixTranspose(rotationMatrix)
         );
 
         return accelerationInWorldFrame[2];

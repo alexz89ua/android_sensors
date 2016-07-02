@@ -1,11 +1,13 @@
 package com.stfalcon.client.util;
 
+import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.stfalcon.client.data.AccelData;
 
@@ -15,20 +17,19 @@ import com.stfalcon.client.data.AccelData;
 public class SensorHelper {
 
     public static final int SENSOR_DELAY_36Hz = 27777; // in  microseconds
-    public static final int ROTATION_SENSOR_DELAY = 1000; // in  microseconds
+    public static final int ROTATION_SENSOR_DELAY = 50 * 1000; // 50ms
 
-    public static final int TYPE_A = 0;   // ACCELEROMETER
-    public static final int TYPE_L = 1;   // LINEAR_ACCELERATION
-    public static final int TYPE_G = 2;   // GRAVITY
-    public static final int TYPE_R = 3;   // ROTATION
 
     private static float[] motion = new float[3];
     private static float[] gravity = new float[3];
     private float gX, gY, gZ;
     private VerticalAccUtil verticalAccUtil;
+    private Sensor mRotationSensor;
+    private Context context;
 
 
-    public SensorHelper() {
+    public SensorHelper(Context context) {
+        this.context = context;
         verticalAccUtil = new VerticalAccUtil();
     }
 
@@ -58,18 +59,28 @@ public class SensorHelper {
      * @param sensorType
      */
     public void registrateListener(SensorEventListener listener, SensorManager sensorManager, int sensorType) {
-        sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), ROTATION_SENSOR_DELAY);
+        mRotationSensor = sensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
+        if (mRotationSensor == null) {
+            Toast.makeText(context,
+                    "Rotation vector sensor not available; will not provide orientation data",
+                    Toast.LENGTH_LONG).show();
+        } else {
+            sensorManager.registerListener(listener, mRotationSensor, ROTATION_SENSOR_DELAY);
+        }
         switch (sensorType) {
-            case TYPE_L:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION), SENSOR_DELAY_36Hz);
+            case Sensor.TYPE_LINEAR_ACCELERATION:
+                Sensor lAcc = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
+                sensorManager.registerListener(listener, lAcc, SENSOR_DELAY_36Hz);
                 break;
 
-            case TYPE_G:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY), SENSOR_DELAY_36Hz);
+            case Sensor.TYPE_GRAVITY:
+                Sensor gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+                sensorManager.registerListener(listener, gravity, SENSOR_DELAY_36Hz);
                 break;
 
             default:
-                sensorManager.registerListener(listener, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SENSOR_DELAY_36Hz);
+                Sensor acc = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+                sensorManager.registerListener(listener, acc, SENSOR_DELAY_36Hz);
                 break;
         }
     }
@@ -91,25 +102,12 @@ public class SensorHelper {
         gZ = sensorEvent.values[2] / SensorManager.GRAVITY_EARTH;
 
         // gForce will be close to 1 when there is no movement.
-        float sqrt = Math.abs((float)(Math.sqrt(gX * gX + gY * gY + gZ * gZ) - 1));
-        float verticalAcc = verticalAccUtil.onSensorChanged(sensorEvent) / SensorManager.GRAVITY_EARTH;
+        float sqrt = Math.abs((float) (Math.sqrt(gX * gX + gY * gY + gZ * gZ) - 1));
+        float verticalAcc =  Math.abs(verticalAccUtil.onSensorChanged(sensorEvent) / SensorManager.GRAVITY_EARTH - 1);
 
-        int sensorType = 0;
-        switch (sensorEvent.sensor.getType()){
-            case Sensor.TYPE_ACCELEROMETER:
-                sensorType = TYPE_A;
-                break;
-            case Sensor.TYPE_LINEAR_ACCELERATION:
-                sensorType = TYPE_L;
-                break;
-            case Sensor.TYPE_GRAVITY:
-                sensorType = TYPE_G;
-                break;
-            default:
-                return null;
-        }
+        int sensorType = sensorEvent.sensor.getType();
 
-        return new AccelData(null,sensorType, gX, gY, gZ, sqrt, verticalAcc,
+        return new AccelData(null, sensorType, gX, gY, gZ, sqrt, verticalAcc,
                 System.currentTimeMillis(), 0, 0, 0);
     }
 
